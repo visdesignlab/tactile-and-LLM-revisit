@@ -1,0 +1,47 @@
+{
+  "$schema": "https://raw.githubusercontent.com/revisit-studies/study/dev/src/parser/StudyConfigSchema.json",
+  "studyMetadata": {
+    "title": "HTML as a Stimulus",
+    "version": "pilot",
+    "authors": [
+      "The reVISit Team"
+    ],
+    "date": "2023-04-14",
+    "description": "A simple demo of using stimuli in an HTML file that renders a D3 visualization. Data is collected via a numeric response field.",
+    "organizations": [
+      "University of Utah",
+      "WPI",
+      "University of Toronto"
+    ]
+  },
+  "uiConfig": {
+    "contactEmail": "contact@revisit.dev",
+    "helpTextPath": "demo-html/assets/help.md",
+    "logoPath": "revisitAssets/revisitLogoSquare.svg",
+    "withProgressBar": true,
+    "autoDownloadStudy": false,
+    "withSidebar": false,,
+    "windowEventDebounceTime": 200,
+    "minHeightSize": 800,
+    "minWidthSize": 400
+  },
+  "components": {
+    "introduction": {
+      "type": "markdown",
+      "path": "tactile-llm/assets/introduction.md",
+      "response": []
+    },
+    "testComponent": {
+      "type": "react-component",
+      "path": "tactile-llm/assets/test.tsx",
+      "response": []
+    }
+  },
+  "sequence": {
+    "order": "fixed",
+    "components": [
+      "introduction",
+      "testComponent"
+    ]
+  }
+}
