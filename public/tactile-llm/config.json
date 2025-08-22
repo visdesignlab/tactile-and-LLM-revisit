@@ -20,10 +20,8 @@
     "logoPath": "revisitAssets/revisitLogoSquare.svg",
     "withProgressBar": true,
     "autoDownloadStudy": false,
-    "withSidebar": false,,
-    "windowEventDebounceTime": 200,
-    "minHeightSize": 800,
-    "minWidthSize": 400
+    "withSidebar": false,
+    "windowEventDebounceTime": 200
   },
   "components": {
     "introduction": {
