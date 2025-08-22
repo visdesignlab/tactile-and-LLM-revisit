@@ -43,32 +43,32 @@
 //     // Prepare chart-specific files
 //     const csvFileName = `${chartType}.csv`;
 //     const pngFileName = `${chartType}.png`;
-    
+
 //     let csvContent: string;
 //     let pngBuffer: Buffer;
-    
+
 //     try {
 //       // Check if files exist
 //       const csvPath = join(process.cwd(), 'data', csvFileName);
 //       const pngPath = join(process.cwd(), 'images', pngFileName);
-      
+
 //       if (!existsSync(csvPath)) {
 //         return NextResponse.json(
 //           { error: `CSV file not found for chart type: ${chartType}` },
 //           { status: 404 }
 //         );
 //       }
-      
+
 //       if (!existsSync(pngPath)) {
 //         return NextResponse.json(
 //           { error: `Image file not found for chart type: ${chartType}` },
 //           { status: 404 }
 //         );
 //       }
-      
+
 //       // Read CSV file
 //       csvContent = readFileSync(csvPath, 'utf-8');
-      
+
 //       // Read PNG file
 //       pngBuffer = readFileSync(pngPath);
 //     } catch (fileError) {
@@ -80,7 +80,7 @@
 //     }
 
 //     // Create a system prompt that includes context about the chart type and study
-//     const systemPrompt = `You are an AI assistant helping a participant learn about ${chartType.replace('-', ' ')} charts in an accessibility study. 
+//     const systemPrompt = `You are an AI assistant helping a participant learn about ${chartType.replace('-', ' ')} charts in an accessibility study.
 
 // ${prePrompt}
 
@@ -104,9 +104,9 @@
 //     const completion = await openai.chat.completions.create({
 //       model: "gpt-4o",
 //       messages: [
-//         { 
-//           role: "system", 
-//           content: systemPrompt 
+//         {
+//           role: "system",
+//           content: systemPrompt
 //         },
 //         {
 //           role: "user",
@@ -143,7 +143,7 @@
 
 //   } catch (error) {
 //     console.error('Error in chat API:', error);
-    
+
 //     if (error instanceof OpenAI.APIError) {
 //       return NextResponse.json(
 //         { error: `OpenAI API error: ${error.message}` },
@@ -156,4 +156,4 @@
 //       { status: 500 }
 //     );
 //   }
-// } 
+// }

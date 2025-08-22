@@ -1,12 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import rehypeRaw from 'rehype-raw';
-import remarkBreaks from 'remark-breaks';
 import { PREFIX } from '../../../utils/Prefix';
 import { useStudyId } from '../../../routes/utils';
+import { ReactMarkdownWrapper } from '../../../components/ReactMarkdownWrapper';
 
 interface InstructionsDisplayProps {
   chartType: 'violin-plot' | 'clustered-heatmap';
@@ -24,28 +21,28 @@ export default function InstructionsDisplay({ chartType, modality }: Instruction
     const loadInstructions = async () => {
       try {
         setLoading(true);
-        
+
         // Determine which instruction file to load
         const instructionType = modality === 'tactile' ? 'tactile' : 'text';
         const fileName = `${chartType}_instructions_${instructionType}.md`;
-        
+
         // In production, this would fetch from an API
         // For now, we'll simulate loading the content
         const response = await fetch(`${PREFIX}${studyId}/assets/instructions/${fileName}`);
-        
+
         if (!response.ok) {
           throw new Error(`Failed to load instructions: ${response.statusText}`);
         }
-        
+
         const content = await response.text();
         setInstructions(content);
       } catch (err) {
         console.error('Error loading instructions:', err);
         setError('Failed to load instructions. Please try refreshing the page.');
-        
+
         // Fallback to basic instructions
         if (modality === 'tactile') {
-          setInstructions(`# ${chartType.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())} - Tactile Instructions
+          setInstructions(`# ${chartType.replace('-', ' ').replace(/\b\w/g, (l) => l.toUpperCase())} - Tactile Instructions
 
 This is a tactile chart exploration session. You will be provided with tactile instructions to explore the chart.
 
@@ -57,7 +54,7 @@ This is a tactile chart exploration session. You will be provided with tactile i
 
 Please follow the tactile instructions carefully and ask the AI assistant any questions you have about the chart.`);
         } else {
-          setInstructions(`# ${chartType.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())} - Text Instructions
+          setInstructions(`# ${chartType.replace('-', ' ').replace(/\b\w/g, (l) => l.toUpperCase())} - Text Instructions
 
 This is a text-based learning session about ${chartType.replace('-', ' ')} charts.
 
@@ -75,13 +72,13 @@ Read through the instructions and ask the AI assistant any questions you have ab
     };
 
     loadInstructions();
-  }, [chartType, modality]);
+  }, [chartType, modality, studyId]);
 
   if (loading) {
     return (
       <div className="card">
         <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
           <span className="ml-3 text-gray-600">Loading instructions...</span>
         </div>
       </div>
@@ -93,8 +90,9 @@ Read through the instructions and ask the AI assistant any questions you have ab
       <div className="card">
         <div className="text-center py-6">
           <p className="text-red-600 mb-4">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
             className="btn-secondary"
           >
             Refresh Page
@@ -111,33 +109,15 @@ Read through the instructions and ask the AI assistant any questions you have ab
           {modality === 'tactile' ? 'Tactile Chart Instructions' : 'Chart Explanation'}
         </h2>
         <p className="text-caption">
-          {modality === 'tactile' 
+          {modality === 'tactile'
             ? 'Follow these tactile exploration instructions to learn about the chart'
-            : 'Read this explanation to understand the chart type'
-          }
+            : 'Read this explanation to understand the chart type'}
         </p>
       </div>
 
       <div className="prose prose-sm max-w-none">
-        <ReactMarkdown
-          remarkPlugins={[remarkGfm, remarkBreaks]}
-          rehypePlugins={[rehypeRaw]}
-          components={{
-            h1: ({ children }) => <h1 className="text-2xl font-bold text-gray-900 mb-4">{children}</h1>,
-            h2: ({ children }) => <h2 className="text-xl font-semibold text-gray-800 mb-3">{children}</h2>,
-            h3: ({ children }) => <h3 className="text-lg font-medium text-gray-700 mb-2">{children}</h3>,
-            p: ({ children }) => <p className="text-body mb-3">{children}</p>,
-            ul: ({ children }) => <ul className="list-disc list-inside space-y-1 mb-3">{children}</ul>,
-            ol: ({ children }) => <ol className="list-decimal list-inside space-y-1 mb-3">{children}</ol>,
-            li: ({ children }) => <li className="text-body">{children}</li>,
-            strong: ({ children }) => <strong className="font-semibold text-gray-900">{children}</strong>,
-            em: ({ children }) => <em className="italic text-gray-700">{children}</em>,
-            code: ({ children }) => <code className="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono">{children}</code>,
-          }}
-        >
-          {instructions}
-        </ReactMarkdown>
+        <ReactMarkdownWrapper text={instructions} />
       </div>
     </div>
   );
-} 
+}

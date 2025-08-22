@@ -3,6 +3,19 @@
 import { useState, useRef, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { IconMessage, IconSend } from '@tabler/icons-react';
+import {
+  Flex,
+  Text,
+  Textarea,
+  Button,
+  Loader,
+  ScrollArea,
+  Group,
+  Paper,
+  Divider,
+  rem,
+  Box,
+} from '@mantine/core';
 
 interface ChatMessage {
   id: string;
@@ -21,7 +34,18 @@ export default function ChatInterface({ chartType }: { chartType: 'violin-plot' 
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const headerHeight = 80; // Adjust this value to match your header's height in px
+    if (messagesEndRef.current) {
+      const scrollArea = messagesEndRef.current.parentElement;
+      if (scrollArea) {
+        const endRect = messagesEndRef.current.getBoundingClientRect();
+        const scrollAreaRect = scrollArea.getBoundingClientRect();
+        const offset = endRect.bottom - scrollAreaRect.bottom + headerHeight;
+        scrollArea.scrollTop += offset;
+      } else {
+        messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      }
+    }
   }, [messages]);
 
   // Focus input on mount
@@ -31,7 +55,7 @@ export default function ChatInterface({ chartType }: { chartType: 'violin-plot' 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!inputValue.trim() || isLoading) return;
 
     const userMessage: ChatMessage = {
@@ -41,21 +65,25 @@ export default function ChatInterface({ chartType }: { chartType: 'violin-plot' 
       timestamp: new Date(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     setInputValue('');
     setIsLoading(true);
     setError(null);
 
     try {
       // Call the real LLM API
-      const response = await fetch('/api/chat', {
+      const response = await fetch(`${import.meta.env.VITE_OPENAI_API_URL}/v1/chat/completions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          message: inputValue.trim(),
-          chartType,
+          model: 'gpt-3.5-turbo',
+          // message: inputValue.trim(),
+          messages: [...messages, userMessage].map((msg) => ({
+            role: 'user',
+            content: msg.content || '',
+          })),
         }),
       });
 
@@ -65,20 +93,19 @@ export default function ChatInterface({ chartType }: { chartType: 'violin-plot' 
       }
 
       const data = await response.json();
-      
+
       const assistantMessage: ChatMessage = {
         id: uuidv4(),
         role: 'assistant',
-        content: data.response,
+        content: data.choices[0].message.content,
         timestamp: new Date(),
       };
 
-      setMessages(prev => [...prev, assistantMessage]);
-      
+      setMessages((prev) => [...prev, assistantMessage]);
+
       // Store messages in localStorage for data collection
       // const allMessages = [...messages, userMessage, assistantMessage];
       // localStorage.setItem(`chat_${participantId}_${chartType}`, JSON.stringify(allMessages));
-      
     } catch (err) {
       console.error('Error getting LLM response:', err);
       setError(err instanceof Error ? err.message : 'Failed to get response. Please try again.');
@@ -87,100 +114,110 @@ export default function ChatInterface({ chartType }: { chartType: 'violin-plot' 
     }
   };
 
-
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSubmit(e as any);
+      handleSubmit(e);
     }
   };
 
   return (
-    <div className="card h-full flex flex-col">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="heading-2">AI Assistant Chat</h2>
-      </div>
-
+    <Box mah="100%">
+      <Group justify="space-between" gap="md" mb="md">
+        <Text size="xl" fw={700}>
+          AI Assistant Chat
+        </Text>
+      </Group>
+      <Divider mb="sm" />
       {/* Messages Container */}
-      <div className="flex-1 overflow-y-auto mb-4 space-y-4 min-h-96">
+      <ScrollArea style={{ flex: 1, minHeight: rem(320), marginBottom: rem(16) }} offsetScrollbars>
         {messages.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
-            <IconMessage className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p className="text-lg font-medium">Start a conversation</p>
-            <p className="text-sm">Ask me anything about {chartType.replace('-', ' ')}s!</p>
-          </div>
+          <Flex direction="column" align="center" justify="center" py="xl" style={{ color: '#6B7280' }}>
+            <IconMessage size={48} style={{ opacity: 0.5, marginBottom: rem(12) }} />
+            <Text size="lg" fw={500} mb={4}>Start a conversation</Text>
+            <Text size="sm" color="dimmed">
+              Ask me anything about
+              {' '}
+              {chartType.replace('-', ' ')}
+              s!
+            </Text>
+          </Flex>
         ) : (
-          messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                  message.role === 'user'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-900'
-                }`}
+          <Flex direction="column" gap="md">
+            {messages.map((message) => (
+              <Flex
+                key={message.id}
+                justify={message.role === 'user' ? 'flex-end' : 'flex-start'}
               >
-                <p className="text-sm">{message.content}</p>
-                <p className={`text-xs mt-1 ${
-                  message.role === 'user' ? 'text-blue-100' : 'text-gray-500'
-                }`}>
-                  {message.timestamp.toLocaleTimeString()}
-                </p>
-              </div>
-            </div>
-          ))
+                <Paper
+                  shadow={message.role === 'user' ? 'md' : 'xs'}
+                  radius="md"
+                  p="md"
+                  withBorder
+                  style={{
+                    maxWidth: 400,
+                    backgroundColor: message.role === 'user' ? '#228be6' : '#f8f9fa',
+                    color: message.role === 'user' ? '#fff' : '#212529',
+                  }}
+                >
+                  <Text size="sm">{message.content}</Text>
+                  <Text size="xs" mt={4} color={message.role === 'user' ? 'blue.1' : 'gray.6'}>
+                    {message.timestamp.toLocaleTimeString()}
+                  </Text>
+                </Paper>
+              </Flex>
+            ))}
+          </Flex>
         )}
-        
         {isLoading && (
-          <div className="flex justify-start">
-            <div className="bg-gray-100 text-gray-900 px-4 py-2 rounded-lg">
-              <div className="flex items-center space-x-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
-                <span className="text-sm">AI is thinking...</span>
-              </div>
-            </div>
-          </div>
+          <Flex justify="flex-start" mt="md">
+            <Paper shadow="xs" radius="md" p="md" withBorder style={{ backgroundColor: '#f8f9fa', color: '#212529' }}>
+              <Group gap="xs">
+                <Loader size="sm" color="gray" />
+                <Text size="sm">AI is thinking...</Text>
+              </Group>
+            </Paper>
+          </Flex>
         )}
-        
         <div ref={messagesEndRef} />
-      </div>
-
+      </ScrollArea>
       {/* Error Display */}
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-600 text-sm">{error}</p>
-        </div>
+        <Paper mb="md" p="sm" radius="md" withBorder style={{ backgroundColor: '#fff0f0', borderColor: '#ffe3e3' }}>
+          <Text color="red" size="sm">{error}</Text>
+        </Paper>
       )}
-
       {/* Input Form */}
-      <form onSubmit={handleSubmit} className="flex gap-2">
-        <textarea
+      <form onSubmit={handleSubmit} style={{ display: 'flex', gap: rem(8) }}>
+        <Textarea
           ref={inputRef}
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyPress={handleKeyPress}
           placeholder="Ask me about the chart..."
-          className="flex-1 input-field resize-none"
-          rows={2}
+          minRows={2}
+          maxRows={4}
           disabled={isLoading}
           aria-label="Type your message"
+          style={{ flex: 1 }}
+          autosize
         />
-        <button
+        <Button
           type="submit"
           disabled={!inputValue.trim() || isLoading}
-          className="btn-primary px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          variant="filled"
+          color="blue"
+          px={rem(16)}
           aria-label="Send message"
+          style={{ alignSelf: 'flex-end' }}
         >
-          <IconSend className="w-4 h-4" />
-        </button>
+          <IconSend size={18} />
+        </Button>
       </form>
-
       {/* Accessibility Info */}
-      <div className="mt-4 text-xs text-gray-500">
-        <p>Press Enter to send, Shift+Enter for new line. All conversations are recorded for research purposes.</p>
-      </div>
-    </div>
+      <Text mt="md" size="xs" color="dimmed">
+        Press Enter to send, Shift+Enter for new line. All conversations are recorded for research purposes.
+      </Text>
+    </Box>
   );
-} 
+}
