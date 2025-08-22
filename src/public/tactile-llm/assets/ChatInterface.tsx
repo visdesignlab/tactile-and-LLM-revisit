@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { v4 as uuidv4 } from 'uuid';
 import { IconMessage, IconSend } from '@tabler/icons-react';
 import {
   Flex,
@@ -18,14 +17,45 @@ import {
 } from '@mantine/core';
 
 interface ChatMessage {
-  id: string;
-  role: 'user' | 'assistant';
+  role: 'user' | 'assistant' | 'system';
   content: string;
   timestamp: Date;
+  display: boolean;
 }
 
 export default function ChatInterface({ chartType }: { chartType: 'violin-plot' | 'clustered-heatmap' }) {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const prePrompt = chartType === 'violin-plot'
+    ? `This is a tactile chart exploration session. You will be provided with tactile instructions to explore the chart.
+    Please follow the tactile instructions carefully and ask the AI assistant any questions you have about the chart.`
+    : `This is a text-based learning session about ${chartType.replace('-', ' ')} charts.
+    You will receive text instructions to help you understand the chart. Feel free to ask the AI assistant any questions you have about the chart.`;
+
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      role: 'system',
+      content: `You are an AI assistant helping a participant learn about ${chartType.replace('-', ' ')} charts in an accessibility study.
+
+${prePrompt}
+
+Your role is to:
+- Help participants understand the chart type and its purpose
+- Answer questions about data visualization concepts
+- Provide clear, accessible explanations
+- Be patient and supportive of learning
+- Keep responses concise but informative
+
+IMPORTANT: You will receive both the CSV data and the visual image for the chart. Use them to:
+1. Analyze the CSV data to understand the underlying data structure, statistics, and relationships
+2. Interpret the visual image to understand how the data is represented graphically
+3. Combine both data and visual analysis to provide comprehensive, accurate answers
+4. When appropriate, suggest Python code examples for data analysis (you can write code in your responses)
+5. Help participants understand the connection between the raw data and the visual representation
+
+The participant is working with ${chartType} charts. Be helpful and encouraging in your responses.`,
+      timestamp: new Date(),
+      display: false,
+    },
+  ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,10 +89,10 @@ export default function ChatInterface({ chartType }: { chartType: 'violin-plot' 
     if (!inputValue.trim() || isLoading) return;
 
     const userMessage: ChatMessage = {
-      id: uuidv4(),
       role: 'user',
       content: inputValue.trim(),
       timestamp: new Date(),
+      display: true,
     };
 
     setMessages((prev) => [...prev, userMessage]);
@@ -95,10 +125,10 @@ export default function ChatInterface({ chartType }: { chartType: 'violin-plot' 
       const data = await response.json();
 
       const assistantMessage: ChatMessage = {
-        id: uuidv4(),
         role: 'assistant',
         content: data.choices[0].message.content,
         timestamp: new Date(),
+        display: true,
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
@@ -144,9 +174,9 @@ export default function ChatInterface({ chartType }: { chartType: 'violin-plot' 
           </Flex>
         ) : (
           <Flex direction="column" gap="md">
-            {messages.map((message) => (
+            {messages.map((message) => message.display && (
               <Flex
-                key={message.id}
+                key={message.timestamp.toISOString()}
                 justify={message.role === 'user' ? 'flex-end' : 'flex-start'}
               >
                 <Paper
