@@ -2,7 +2,7 @@ import { Card, Flex } from '@mantine/core';
 import ChatInterface from './ChatInterface';
 import InstructionsDisplay from './InstructionsDisplay';
 
-export default function TestComponent() {
+export default function LLMInterface() {
   return (
     <Flex direction="row" gap="lg">
       <Card shadow="md" style={{ flex: 1 }} withBorder>

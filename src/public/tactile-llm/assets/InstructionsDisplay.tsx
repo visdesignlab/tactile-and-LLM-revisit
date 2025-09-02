@@ -1,5 +1,12 @@
-'use client';
-
+import {
+  Card,
+  Flex,
+  Text,
+  Button,
+  Loader,
+  Divider,
+  rem,
+} from '@mantine/core';
 import { useState, useEffect } from 'react';
 import { PREFIX } from '../../../utils/Prefix';
 import { useStudyId } from '../../../routes/utils';
@@ -76,48 +83,44 @@ Read through the instructions and ask the AI assistant any questions you have ab
 
   if (loading) {
     return (
-      <div className="card">
-        <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
-          <span className="ml-3 text-gray-600">Loading instructions...</span>
-        </div>
-      </div>
+      <Card shadow="md" radius="lg" p="lg" withBorder>
+        <Flex align="center" justify="center" py="xl" gap="md">
+          <Loader size={32} color="blue" />
+          <Text color="gray.6" size="md">Loading instructions...</Text>
+        </Flex>
+      </Card>
     );
   }
 
   if (error) {
     return (
-      <div className="card">
-        <div className="text-center py-6">
-          <p className="text-red-600 mb-4">{error}</p>
-          <button
-            type="button"
-            onClick={() => window.location.reload()}
-            className="btn-secondary"
-          >
+      <Card shadow="md" radius="lg" p="lg" withBorder>
+        <Flex direction="column" align="center" justify="center" py="xl" gap="md">
+          <Text color="red.6" size="md" mb={rem(8)}>{error}</Text>
+          <Button variant="outline" color="blue" onClick={() => window.location.reload()}>
             Refresh Page
-          </button>
-        </div>
-      </div>
+          </Button>
+        </Flex>
+      </Card>
     );
   }
 
   return (
-    <div className="card">
-      <div className="mb-4">
-        <h2 className="heading-2">
+    <>
+      <Flex direction="column" mb="md">
+        <Text size="xl" fw={700}>
           {modality === 'tactile' ? 'Tactile Chart Instructions' : 'Chart Explanation'}
-        </h2>
-        <p className="text-caption">
+        </Text>
+        <Text size="sm" c="dimmed">
           {modality === 'tactile'
             ? 'Follow these tactile exploration instructions to learn about the chart'
             : 'Read this explanation to understand the chart type'}
-        </p>
-      </div>
-
-      <div className="prose prose-sm max-w-none">
+        </Text>
+      </Flex>
+      <Divider mb="md" />
+      <div style={{ maxWidth: '100%' }}>
         <ReactMarkdownWrapper text={instructions} />
       </div>
-    </div>
+    </>
   );
 }

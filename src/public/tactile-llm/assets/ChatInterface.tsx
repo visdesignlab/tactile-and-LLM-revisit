@@ -153,12 +153,10 @@ The participant is working with ${chartType} charts. Be helpful and encouraging 
 
   return (
     <Box mah="100%">
-      <Group justify="space-between" gap="md" mb="md">
-        <Text size="xl" fw={700}>
-          AI Assistant Chat
-        </Text>
-      </Group>
-      <Divider mb="sm" />
+      <Text size="xl" fw={700} mb={36}>
+        AI Assistant Chat
+      </Text>
+      <Divider my="sm" />
       {/* Messages Container */}
       <ScrollArea style={{ flex: 1, minHeight: rem(320), marginBottom: rem(16) }} offsetScrollbars>
         {messages.length === 0 ? (
