@@ -12,12 +12,10 @@ import { PREFIX } from '../../../utils/Prefix';
 import { useStudyId } from '../../../routes/utils';
 import { ReactMarkdownWrapper } from '../../../components/ReactMarkdownWrapper';
 
-interface InstructionsDisplayProps {
+export default function InstructionsDisplay({ chartType, modality }: {
   chartType: 'violin-plot' | 'clustered-heatmap';
   modality: 'tactile' | 'text';
-}
-
-export default function InstructionsDisplay({ chartType, modality }: InstructionsDisplayProps) {
+}) {
   const studyId = useStudyId();
 
   const [instructions, setInstructions] = useState<string>('');

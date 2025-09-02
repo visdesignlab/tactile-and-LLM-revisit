@@ -1,0 +1,18 @@
+export interface ChatMessage {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  timestamp: number;
+  display: boolean;
+}
+
+export interface ChatProvenanceState {
+  messages: ChatMessage[];
+}
+
+type ChartType = 'violin-plot' | 'clustered-heatmap';
+type ChartModality = 'tactile' | 'text';
+
+export interface ChatInterfaceParams {
+  chartType: ChartType;
+  modality: ChartModality;
+}

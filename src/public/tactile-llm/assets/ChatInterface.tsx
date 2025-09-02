@@ -1,6 +1,6 @@
-'use client';
-
-import { useState, useRef, useEffect } from 'react';
+import {
+  useState, useRef, useEffect, useMemo,
+} from 'react';
 import { IconMessage, IconSend } from '@tabler/icons-react';
 import {
   Flex,
@@ -15,22 +15,49 @@ import {
   rem,
   Box,
 } from '@mantine/core';
+import { initializeTrrack, Registry } from '@trrack/core';
+import { ChatMessage, ChatProvenanceState } from './types';
+import { StimulusParams } from '../../../store/types';
 
-interface ChatMessage {
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-  timestamp: Date;
-  display: boolean;
-}
+export default function ChatInterface(
+  { chartType, setAnswer, provenanceState }:
+  {
+    chartType: 'violin-plot' | 'clustered-heatmap',
+    setAnswer: StimulusParams<never>['setAnswer'],
+    provenanceState?: ChatProvenanceState,
+  },
+) {
+  const { actions, trrack } = useMemo(() => {
+    const reg = Registry.create();
 
-export default function ChatInterface({ chartType }: { chartType: 'violin-plot' | 'clustered-heatmap' }) {
+    const updateMessages = reg.register('brush', (state, newState: ChatProvenanceState) => {
+      // eslint-disable-next-line no-param-reassign
+      state = newState;
+      return state;
+    });
+
+    const trrackInst = initializeTrrack({
+      registry: reg,
+      initialState: {
+        messages: [],
+      },
+    });
+
+    return {
+      actions: {
+        updateMessages,
+      },
+      trrack: trrackInst,
+    };
+  }, []);
+
   const prePrompt = chartType === 'violin-plot'
     ? `This is a tactile chart exploration session. You will be provided with tactile instructions to explore the chart.
     Please follow the tactile instructions carefully and ask the AI assistant any questions you have about the chart.`
     : `This is a text-based learning session about ${chartType.replace('-', ' ')} charts.
     You will receive text instructions to help you understand the chart. Feel free to ask the AI assistant any questions you have about the chart.`;
 
-  const [messages, setMessages] = useState<ChatMessage[]>([
+  const initialMessages: ChatMessage[] = useMemo(() => [
     {
       role: 'system',
       content: `You are an AI assistant helping a participant learn about ${chartType.replace('-', ' ')} charts in an accessibility study.
@@ -52,10 +79,19 @@ IMPORTANT: You will receive both the CSV data and the visual image for the chart
 5. Help participants understand the connection between the raw data and the visual representation
 
 The participant is working with ${chartType} charts. Be helpful and encouraging in your responses.`,
-      timestamp: new Date(),
+      timestamp: new Date().getTime(),
       display: false,
     },
-  ]);
+  ], [chartType, prePrompt]);
+  const [messages, setMessages] = useState<ChatMessage[]>([...initialMessages]);
+  useEffect(() => {
+    if (provenanceState) {
+      setMessages(provenanceState.messages);
+    } else {
+      setMessages([...initialMessages]);
+    }
+  }, [provenanceState, initialMessages]);
+
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -91,7 +127,7 @@ The participant is working with ${chartType} charts. Be helpful and encouraging 
     const userMessage: ChatMessage = {
       role: 'user',
       content: inputValue.trim(),
-      timestamp: new Date(),
+      timestamp: new Date().getTime(),
       display: true,
     };
 
@@ -127,11 +163,22 @@ The participant is working with ${chartType} charts. Be helpful and encouraging 
       const assistantMessage: ChatMessage = {
         role: 'assistant',
         content: data.choices[0].message.content,
-        timestamp: new Date(),
+        timestamp: new Date().getTime(),
         display: true,
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
+
+      trrack.apply('updateMessages', actions.updateMessages({
+        messages: [...messages, userMessage, assistantMessage],
+      }));
+
+      // Update provenance state
+      setAnswer({
+        status: true,
+        provenanceGraph: trrack.graph.backend,
+        answers: {},
+      });
 
       // Store messages in localStorage for data collection
       // const allMessages = [...messages, userMessage, assistantMessage];
@@ -174,7 +221,7 @@ The participant is working with ${chartType} charts. Be helpful and encouraging 
           <Flex direction="column" gap="md">
             {messages.map((message) => message.display && (
               <Flex
-                key={message.timestamp.toISOString()}
+                key={new Date(message.timestamp).toISOString()}
                 justify={message.role === 'user' ? 'flex-end' : 'flex-start'}
               >
                 <Paper
@@ -190,7 +237,7 @@ The participant is working with ${chartType} charts. Be helpful and encouraging 
                 >
                   <Text size="sm">{message.content}</Text>
                   <Text size="xs" mt={4} color={message.role === 'user' ? 'blue.1' : 'gray.6'}>
-                    {message.timestamp.toLocaleTimeString()}
+                    {new Date(message.timestamp).toLocaleTimeString()}
                   </Text>
                 </Paper>
               </Flex>

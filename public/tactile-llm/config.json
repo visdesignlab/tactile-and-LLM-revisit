@@ -32,7 +32,11 @@
     "testComponent": {
       "type": "react-component",
       "path": "tactile-llm/assets/LLMInterface.tsx",
-      "response": []
+      "response": [],
+      "parameters": {
+        "chartType": "violin-plot",
+        "modality": "tactile"
+      }
     }
   },
   "sequence": {
