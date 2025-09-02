@@ -31,8 +31,12 @@
     },
     "testComponent": {
       "type": "react-component",
-      "path": "tactile-llm/assets/test.tsx",
-      "response": []
+      "path": "tactile-llm/assets/LLMInterface.tsx",
+      "response": [],
+      "parameters": {
+        "chartType": "violin-plot",
+        "modality": "tactile"
+      }
     }
   },
   "sequence": {
