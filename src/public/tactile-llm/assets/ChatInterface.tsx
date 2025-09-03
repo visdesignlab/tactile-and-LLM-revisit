@@ -177,7 +177,9 @@ The participant is working with ${chartType} charts. Be helpful and encouraging 
       setAnswer({
         status: true,
         provenanceGraph: trrack.graph.backend,
-        answers: {},
+        answers: {
+          messages: JSON.stringify([...messages, userMessage, assistantMessage]),
+        },
       });
 
       // Store messages in localStorage for data collection
