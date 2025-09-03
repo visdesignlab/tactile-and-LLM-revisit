@@ -29,6 +29,18 @@
       "path": "tactile-llm/assets/introduction.md",
       "response": []
     },
+    "systemPrompt": {
+      "type": "questionnaire",
+      "response": [
+      {
+          "id": "systemPrompt",
+          "prompt": "System Prompt",
+          "location": "aboveStimulus",
+          "type": "longText",
+          "placeholder": "Please enter the system prompt for the LLM."
+      }
+    ]
+  },
     "testComponent": {
       "type": "react-component",
       "path": "tactile-llm/assets/LLMInterface.tsx",
@@ -43,6 +55,7 @@
     "order": "fixed",
     "components": [
       "introduction",
+      "systemPrompt",
       "testComponent"
     ]
   }
