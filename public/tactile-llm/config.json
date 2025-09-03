@@ -29,11 +29,11 @@
       "path": "tactile-llm/assets/introduction.md",
       "response": []
     },
-    "systemPrompt": {
+    "prePrompt": {
       "type": "questionnaire",
       "response": [
       {
-          "id": "systemPrompt",
+          "id": "prePrompt",
           "prompt": "System Prompt",
           "location": "aboveStimulus",
           "type": "longText",
@@ -55,7 +55,7 @@
     "order": "fixed",
     "components": [
       "introduction",
-      "systemPrompt",
+      "prePrompt",
       "testComponent"
     ]
   }
