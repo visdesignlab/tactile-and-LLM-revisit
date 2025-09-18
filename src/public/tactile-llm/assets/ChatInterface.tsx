@@ -20,11 +20,12 @@ import { ChatMessage, ChatProvenanceState } from './types';
 import { StimulusParams } from '../../../store/types';
 
 export default function ChatInterface(
-  { chartType, setAnswer, provenanceState }:
+  { chartType, setAnswer, provenanceState, testSystemPrompt }:
   {
     chartType: 'violin-plot' | 'clustered-heatmap',
     setAnswer: StimulusParams<never>['setAnswer'],
     provenanceState?: ChatProvenanceState,
+    testSystemPrompt?: string,
   },
 ) {
   const { actions, trrack } = useMemo(() => {
@@ -51,6 +52,7 @@ export default function ChatInterface(
     };
   }, []);
 
+  console.log('testSystemPrompt:', testSystemPrompt);
   const prePrompt = chartType === 'violin-plot'
     ? `This is a tactile chart exploration session. You will be provided with tactile instructions to explore the chart.
     Please follow the tactile instructions carefully and ask the AI assistant any questions you have about the chart.`
@@ -60,7 +62,7 @@ export default function ChatInterface(
   const initialMessages: ChatMessage[] = useMemo(() => [
     {
       role: 'system',
-      content: `You are an AI assistant helping a participant learn about ${chartType.replace('-', ' ')} charts in an accessibility study.
+      content: testSystemPrompt || `You are an AI assistant helping a participant learn about ${chartType.replace('-', ' ')} charts in an accessibility study.
 
 ${prePrompt}
 
@@ -82,7 +84,7 @@ The participant is working with ${chartType} charts. Be helpful and encouraging 
       timestamp: new Date().getTime(),
       display: false,
     },
-  ], [chartType, prePrompt]);
+  ], [chartType, prePrompt, testSystemPrompt]);
   const [messages, setMessages] = useState<ChatMessage[]>([...initialMessages]);
   useEffect(() => {
     if (provenanceState) {

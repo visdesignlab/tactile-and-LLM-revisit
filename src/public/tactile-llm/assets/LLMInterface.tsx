@@ -4,7 +4,8 @@ import InstructionsDisplay from './InstructionsDisplay';
 import { StimulusParams } from '../../../store/types';
 import { ChatInterfaceParams, ChatProvenanceState } from './types';
 
-export default function LLMInterface({ parameters, setAnswer, provenanceState }: StimulusParams<ChatInterfaceParams, ChatProvenanceState>) {
+export default function LLMInterface({ parameters, setAnswer, answers, provenanceState }: StimulusParams<ChatInterfaceParams, ChatProvenanceState>) {
+  console.log('LLMInterface answers:', answers.prePrompt_1.answer["q-prePrompt"]);
   return (
     <Flex direction="row" gap="lg">
       <Card shadow="md" style={{ flex: 1 }} withBorder>
@@ -12,7 +13,7 @@ export default function LLMInterface({ parameters, setAnswer, provenanceState }:
       </Card>
 
       <Card shadow="md" style={{ flex: 1 }} withBorder>
-        <ChatInterface chartType={parameters.chartType} setAnswer={setAnswer} provenanceState={provenanceState} />
+        <ChatInterface chartType={parameters.chartType} setAnswer={setAnswer} provenanceState={provenanceState} testSystemPrompt={answers.prePrompt_1.answer["q-prePrompt"] as string} />
       </Card>
     </Flex>
   );
