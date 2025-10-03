@@ -20,12 +20,13 @@ import { ChatMessage, ChatProvenanceState } from './types';
 import { StimulusParams } from '../../../store/types';
 
 export default function ChatInterface(
-  { chartType, setAnswer, provenanceState, testSystemPrompt }:
+  { chartType, setAnswer, provenanceState, testSystemPrompt, onClose }:
   {
     chartType: 'violin-plot' | 'clustered-heatmap',
     setAnswer: StimulusParams<never>['setAnswer'],
     provenanceState?: ChatProvenanceState,
     testSystemPrompt?: string,
+    onClose?: () => void,
   },
 ) {
   const { actions, trrack } = useMemo(() => {
@@ -203,10 +204,7 @@ The participant is working with ${chartType} charts. Be helpful and encouraging 
   };
 
   return (
-    <Box mah="100%">
-      <Text size="xl" fw={700} mb={36}>
-        AI Assistant Chat
-      </Text>
+    <Box mah="100%" p="md">
       <Divider my="sm" />
       {/* Messages Container */}
       <ScrollArea style={{ flex: 1, minHeight: rem(320), marginBottom: rem(16) }} offsetScrollbars>

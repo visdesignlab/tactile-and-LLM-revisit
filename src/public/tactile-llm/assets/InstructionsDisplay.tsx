@@ -12,9 +12,10 @@ import { PREFIX } from '../../../utils/Prefix';
 import { useStudyId } from '../../../routes/utils';
 import { ReactMarkdownWrapper } from '../../../components/ReactMarkdownWrapper';
 
-export default function InstructionsDisplay({ chartType, modality }: {
+export default function InstructionsDisplay({ chartType, modality, onOpenChat }: {
   chartType: 'violin-plot' | 'clustered-heatmap';
   modality: 'tactile' | 'text';
+  onOpenChat?: () => void;
 }) {
   const studyId = useStudyId();
 
@@ -106,14 +107,28 @@ Read through the instructions and ask the AI assistant any questions you have ab
   return (
     <>
       <Flex direction="column" mb="md">
-        <Text size="xl" fw={700}>
-          {modality === 'tactile' ? 'Tactile Chart Instructions' : 'Chart Explanation'}
-        </Text>
-        <Text size="sm" c="dimmed">
-          {modality === 'tactile'
-            ? 'Follow these tactile exploration instructions to learn about the chart'
-            : 'Read this explanation to understand the chart type'}
-        </Text>
+        <Flex justify="space-between" align="center">
+          <div>
+            <Text size="xl" fw={700}>
+              {modality === 'tactile' ? 'Tactile Chart Instructions' : 'Chart Explanation'}
+            </Text>
+            <Text size="sm" c="dimmed">
+              {modality === 'tactile'
+                ? 'Follow these tactile exploration instructions to learn about the chart'
+                : 'Read this explanation to understand the chart type'}
+            </Text>
+          </div>
+          {onOpenChat && (
+            <Button
+              variant="outline"
+              color="blue"
+              onClick={onOpenChat}
+              size="sm"
+            >
+              Press 'T' or click to open AI Chat
+            </Button>
+          )}
+        </Flex>
       </Flex>
       <Divider mb="md" />
       <div style={{ maxWidth: '100%' }}>
