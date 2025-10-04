@@ -49,6 +49,7 @@ export default function LLMInterface({ parameters, setAnswer, answers, provenanc
         }}
       >
         <ChatInterface 
+          modality={parameters.modality}
           chartType={parameters.chartType} 
           setAnswer={setAnswer} 
           provenanceState={provenanceState} 

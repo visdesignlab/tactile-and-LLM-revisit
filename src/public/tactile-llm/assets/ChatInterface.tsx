@@ -20,8 +20,9 @@ import { ChatMessage, ChatProvenanceState } from './types';
 import { StimulusParams } from '../../../store/types';
 
 export default function ChatInterface(
-  { chartType, setAnswer, provenanceState, testSystemPrompt, onClose }:
+  { modality, chartType, setAnswer, provenanceState, testSystemPrompt, onClose }:
   {
+    modality: 'tactile' | 'text',
     chartType: 'violin-plot' | 'clustered-heatmap',
     setAnswer: StimulusParams<never>['setAnswer'],
     provenanceState?: ChatProvenanceState,
@@ -54,34 +55,30 @@ export default function ChatInterface(
   }, []);
 
   console.log('testSystemPrompt:', testSystemPrompt);
-  const prePrompt = chartType === 'violin-plot'
+  const prePrompt = modality === 'tactile'
     ? `This is a tactile chart exploration session. You will be provided with tactile instructions to explore the chart.
-    Please follow the tactile instructions carefully and ask the AI assistant any questions you have about the chart.`
+    Please follow the tactile instructions carefully and ask the AI assistant any questions you have about the chart.
+    
+    IMPORTANT: You will receive both the CSV data and the visual image for the chart. Use them to:
+    1. Analyze the CSV data to understand the underlying data structure, statistics, and relationships
+    2. Interpret the visual image to understand how the data is represented graphically
+    3. Combine both data and visual analysis to provide comprehensive, accurate answers
+    4. When appropriate, suggest Python code examples for data analysis
+    5. Help participants understand the connection between the raw data and the visual representation`
     : `This is a text-based learning session about ${chartType.replace('-', ' ')} charts.
-    You will receive text instructions to help you understand the chart. Feel free to ask the AI assistant any questions you have about the chart.`;
+    You will receive text instructions to help you understand the chart. Feel free to ask the AI assistant any questions you have about the chart.
+    
+    IMPORTANT: You will receive both the CSV data and the visual image for the chart. Use them to:
+    1. Analyze the CSV data to understand the underlying data structure, statistics, and relationships
+    2. Interpret the visual image to understand how the data is represented graphically
+    3. Combine both data and visual analysis to provide comprehensive, accurate answers
+    4. When appropriate, suggest Python code examples for data analysis
+    5. Help participants understand the connection between the raw data and the visual representation`;
 
   const initialMessages: ChatMessage[] = useMemo(() => [
     {
       role: 'system',
-      content: testSystemPrompt || `You are an AI assistant helping a participant learn about ${chartType.replace('-', ' ')} charts in an accessibility study.
-
-${prePrompt}
-
-Your role is to:
-- Help participants understand the chart type and its purpose
-- Answer questions about data visualization concepts
-- Provide clear, accessible explanations
-- Be patient and supportive of learning
-- Keep responses concise but informative
-
-IMPORTANT: You will receive both the CSV data and the visual image for the chart. Use them to:
-1. Analyze the CSV data to understand the underlying data structure, statistics, and relationships
-2. Interpret the visual image to understand how the data is represented graphically
-3. Combine both data and visual analysis to provide comprehensive, accurate answers
-4. When appropriate, suggest Python code examples for data analysis (you can write code in your responses)
-5. Help participants understand the connection between the raw data and the visual representation
-
-The participant is working with ${chartType} charts. Be helpful and encouraging in your responses.`,
+      content: testSystemPrompt || `${prePrompt}`,
       timestamp: new Date().getTime(),
       display: false,
     },
@@ -140,19 +137,55 @@ The participant is working with ${chartType} charts. Be helpful and encouraging 
     setError(null);
 
     try {
-      // Call the real LLM API
+      // Load CSV data based on chart type
+      const csvResponse = await fetch(`/tactile-llm/data/${chartType}.csv`);
+      const csvData = await csvResponse.text();
+      
+      // Load image data based on chart type
+      const imageResponse = await fetch(`/tactile-llm/images/${chartType}.png`);
+      const imageBlob = await imageResponse.blob();
+      const imageBase64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(imageBlob);
+      });
+
+      // Call the real LLM API with data and image
       const response = await fetch(`${import.meta.env.VITE_OPENAI_API_URL}/v1/chat/completions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-3.5-turbo',
-          // message: inputValue.trim(),
-          messages: [...messages, userMessage].map((msg) => ({
-            role: 'user',
-            content: msg.content || '',
-          })),
+          model: 'gpt-4o', // Use GPT-4o for vision capabilities
+          messages: [
+            ...messages.map((msg) => ({
+              role: msg.role,
+              content: msg.content || '',
+            })),
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text: userMessage.content
+                },
+                {
+                  type: 'text',
+                  text: `\n\nHere is the CSV data for the ${chartType}:\n\n${csvData}`
+                },
+                {
+                  type: 'image_url',
+                  image_url: {
+                    url: imageBase64
+                  }
+                }
+              ]
+            }
+          ],
+          max_tokens: 1000,
+          temperature: 0.7,
+          stream: true,
         }),
       });
 
