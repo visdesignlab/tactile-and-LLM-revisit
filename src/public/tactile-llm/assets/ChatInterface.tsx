@@ -149,7 +149,7 @@ export default function ChatInterface(
           content: [{ type: "input_text", text: initialMessages[0].content }],
         },
   
-        // ✅ Only include prior user/system messages
+        // Only include prior user/system messages
         ...messages
           .filter((msg) => msg.role !== "assistant")
           .map((msg) => ({
@@ -187,7 +187,7 @@ export default function ChatInterface(
             stream: true,
             input: inputPayload,
             temperature: 0.7,
-            max_output_tokens: 1000,
+            max_output_tokens: 100,
           }),
         }
       );
@@ -208,7 +208,9 @@ export default function ChatInterface(
       };
 
       // Add assistant placeholder
-      setMessages((prev) => [...prev, assistantMessage]);
+      // setMessages((prev) => [...prev, assistantMessage]);
+
+      let firstTokenSeen = false;
 
       while (true) {
         const { done, value } = await reader!.read();
@@ -227,6 +229,18 @@ export default function ChatInterface(
               console.log("PARSED SSE DATA:", parsed);
             
               if (parsed.type === "response.output_text.delta") {
+
+                // first token arrived
+                if (!firstTokenSeen) {
+                  firstTokenSeen = true;
+                  setIsLoading(false); // hide the loader "AI is thinking"
+
+                  // create assistant message only when first token arrives
+                  setMessages((prev) => [
+                    ...prev,
+                    { ...assistantMessage, content: parsed.delta },
+                  ]);
+                }
                 assistantMessage.content += parsed.delta;
             
                 // update React state live
