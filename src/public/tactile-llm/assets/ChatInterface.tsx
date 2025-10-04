@@ -185,7 +185,6 @@ export default function ChatInterface(
           ],
           max_tokens: 1000,
           temperature: 0.7,
-          stream: true,
         }),
       });
 
