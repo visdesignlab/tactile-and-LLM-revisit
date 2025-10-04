@@ -170,8 +170,8 @@ export default function ChatInterface(
               type: "input_image",
               file_id:
                 chartType === "violin-plot"
-                  ? "file-G2dZ13wc5eGeVUmg8Znb9S"
-                  : "file-RndV3st6F83sM7y9SKDDkW",
+                  ? "file-G2dZ13wc5eGeVUmg8Znb9S" // File ID for Violin Plot
+                  : "file-RndV3st6F83sM7y9SKDDkW", // File ID for Clustered Heatmap
             },
           ],
         },
