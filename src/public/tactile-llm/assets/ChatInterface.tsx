@@ -184,6 +184,7 @@ export default function ChatInterface(
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             model: "gpt-4o",
+            stream: true,
             input: inputPayload,
             temperature: 0.7,
             max_output_tokens: 1000,
@@ -191,27 +192,65 @@ export default function ChatInterface(
         }
       );
   
-      const data = await response.json();
-      console.log("LLM raw response:", data);
-  
-      if (!response.ok) {
-        throw new Error(data.error?.message || "Failed to get response");
+      
+      if (!response.ok || !response.body) {
+        throw new Error("Failed to start stream");
       }
-  
-      // ✅ Parse Responses API output
-      const textOutput =
-        data.output
-          ?.flatMap((o: any) => o.content ?? [])
-          .find((c: any) => c.type === "output_text")?.text || "";
-  
-      const assistantMessage: ChatMessage = {
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      let assistantMessage: ChatMessage = {
         role: "assistant",
-        content: textOutput,
-        timestamp: new Date().getTime(),
+        content: "",
+        timestamp: Date.now(),
         display: true,
       };
-  
+
+      // Add assistant placeholder
       setMessages((prev) => [...prev, assistantMessage]);
+
+      while (true) {
+        const { done, value } = await reader!.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        console.log("RAW CHUNK:", chunk); // 👈 log what the proxy sends
+      
+      
+        const lines = chunk.split("\n");
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const dataStr = line.replace("data: ", "").trim();
+            if (dataStr === "[DONE]") return; // end of stream
+            try {
+              const parsed = JSON.parse(dataStr);
+              console.log("PARSED SSE DATA:", parsed);
+            
+              if (parsed.type === "response.output_text.delta") {
+                assistantMessage.content += parsed.delta;
+            
+                // update React state live
+                setMessages((prev) => {
+                  const last = prev[prev.length - 1];
+                  if (last?.role === "assistant") {
+                    return [...prev.slice(0, -1), { ...last, content: assistantMessage.content }];
+                  }
+                  return prev;
+                });
+              }
+            
+              if (parsed.type === "response.output_text.done" || parsed.type === "response.output_item.done") {
+                console.log("FINAL:", assistantMessage.content);
+              }
+            } catch (err) {
+              console.warn("Failed to parse SSE line", dataStr, err);
+            }            
+          }
+        }
+
+      }
+      
+
   
       trrack.apply("updateMessages", actions.updateMessages({
         messages: [...messages, userMessage, assistantMessage],
