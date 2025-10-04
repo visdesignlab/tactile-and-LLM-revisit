@@ -151,56 +151,62 @@ export default function ChatInterface(
       });
 
       // Call the real LLM API with data and image
-      const response = await fetch(`${import.meta.env.VITE_OPENAI_API_URL}/v1/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch(`${import.meta.env.VITE_OPENAI_API_URL}/v1/responses`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: 'gpt-4o', // Use GPT-4o for vision capabilities
-          messages: [
+          model: "gpt-4o",
+          input: [
+            {
+              role: "system",
+              content: [{ type: "input_text", text: initialMessages[0].content }],
+            },
             ...messages.map((msg) => ({
               role: msg.role,
-              content: msg.content || '',
+              content: [{ type: "input_text", text: msg.content }],
             })),
             {
-              role: 'user',
+              role: "user",
               content: [
+                { type: "input_text", text: userMessage.content },
                 {
-                  type: 'text',
-                  text: userMessage.content
+                  type: "input_text",
+                  text: `Here is the CSV data for the ${chartType}:\n\n${csvData}`
                 },
                 {
-                  type: 'text',
-                  text: `\n\nHere is the CSV data for the ${chartType}:\n\n${csvData}`
-                },
-                {
-                  type: 'image_url',
-                  image_url: {
-                    url: imageBase64
-                  }
+                  type: "input_image",
+                  file_id: chartType === "violin-plot"
+                    ? "file-G2dZ13wc5eGeVUmg8Znb9S"  // violin-plot.png
+                    : "file-RndV3st6F83sM7y9SKDDkW", // clustered-heatmap.png
                 }
-              ]
-            }
+              ],
+            },
           ],
-          max_tokens: 1000,
           temperature: 0.7,
+          max_output_tokens: 1000,
         }),
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to get response');
-      }
-
+      
       const data = await response.json();
-
+      console.log("LLM raw response:", data); // helpful for debugging
+      
+      if (!response.ok) {
+        throw new Error(data.error?.message || "Failed to get response");
+      }
+      
+      
+      // Responses API → assistant text
+      const textOutput = data.output
+        ?.flatMap((o: any) => o.content ?? [])
+        .find((c: any) => c.type === "output_text")?.text || '';
+      
       const assistantMessage: ChatMessage = {
         role: 'assistant',
-        content: data.choices[0].message.content,
+        content: textOutput,
         timestamp: new Date().getTime(),
         display: true,
       };
+      
 
       setMessages((prev) => [...prev, assistantMessage]);
 
