@@ -121,100 +121,102 @@ export default function ChatInterface(
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+  
     if (!inputValue.trim() || isLoading) return;
-
+  
     const userMessage: ChatMessage = {
-      role: 'user',
+      role: "user",
       content: inputValue.trim(),
       timestamp: new Date().getTime(),
       display: true,
     };
-
+  
     setMessages((prev) => [...prev, userMessage]);
-    setInputValue('');
+    setInputValue("");
     setIsLoading(true);
     setError(null);
-
+  
     try {
-      // Load CSV data based on chart type
+      // Load CSV data (small enough to inline)
       const csvResponse = await fetch(`/tactile-llm/data/${chartType}.csv`);
       const csvData = await csvResponse.text();
-      
-      // Load image data based on chart type
-      const imageResponse = await fetch(`/tactile-llm/images/${chartType}.png`);
-      const imageBlob = await imageResponse.blob();
-      const imageBase64 = await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.readAsDataURL(imageBlob);
-      });
-
-      // Call the real LLM API with data and image
-      const response = await fetch(`${import.meta.env.VITE_OPENAI_API_URL}/v1/responses`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "gpt-4o",
-          input: [
+  
+      // Build input for Responses API
+      const inputPayload = [
+        // System role
+        {
+          role: "system",
+          content: [{ type: "input_text", text: initialMessages[0].content }],
+        },
+  
+        // ✅ Only include prior user/system messages
+        ...messages
+          .filter((msg) => msg.role !== "assistant")
+          .map((msg) => ({
+            role: msg.role,
+            content: [{ type: "input_text", text: msg.content }],
+          })),
+  
+        // Current user turn (with CSV + image)
+        {
+          role: "user",
+          content: [
+            { type: "input_text", text: userMessage.content },
             {
-              role: "system",
-              content: [{ type: "input_text", text: initialMessages[0].content }],
+              type: "input_text",
+              text: `Here is the CSV data for the ${chartType}:\n\n${csvData}`,
             },
-            ...messages.map((msg) => ({
-              role: msg.role,
-              content: [{ type: "input_text", text: msg.content }],
-            })),
             {
-              role: "user",
-              content: [
-                { type: "input_text", text: userMessage.content },
-                {
-                  type: "input_text",
-                  text: `Here is the CSV data for the ${chartType}:\n\n${csvData}`
-                },
-                {
-                  type: "input_image",
-                  file_id: chartType === "violin-plot"
-                    ? "file-G2dZ13wc5eGeVUmg8Znb9S"  // violin-plot.png
-                    : "file-RndV3st6F83sM7y9SKDDkW", // clustered-heatmap.png
-                }
-              ],
+              type: "input_image",
+              file_id:
+                chartType === "violin-plot"
+                  ? "file-G2dZ13wc5eGeVUmg8Znb9S"
+                  : "file-RndV3st6F83sM7y9SKDDkW",
             },
           ],
-          temperature: 0.7,
-          max_output_tokens: 1000,
-        }),
-      });
-      
+        },
+      ];
+  
+      const response = await fetch(
+        `${import.meta.env.VITE_OPENAI_API_URL}/v1/responses`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "gpt-4o",
+            input: inputPayload,
+            temperature: 0.7,
+            max_output_tokens: 1000,
+          }),
+        }
+      );
+  
       const data = await response.json();
-      console.log("LLM raw response:", data); // helpful for debugging
-      
+      console.log("LLM raw response:", data);
+  
       if (!response.ok) {
         throw new Error(data.error?.message || "Failed to get response");
       }
-      
-      
-      // Responses API → assistant text
-      const textOutput = data.output
-        ?.flatMap((o: any) => o.content ?? [])
-        .find((c: any) => c.type === "output_text")?.text || '';
-      
+  
+      // ✅ Parse Responses API output
+      const textOutput =
+        data.output
+          ?.flatMap((o: any) => o.content ?? [])
+          .find((c: any) => c.type === "output_text")?.text || "";
+  
       const assistantMessage: ChatMessage = {
-        role: 'assistant',
+        role: "assistant",
         content: textOutput,
         timestamp: new Date().getTime(),
         display: true,
       };
-      
-
+  
       setMessages((prev) => [...prev, assistantMessage]);
-
-      trrack.apply('updateMessages', actions.updateMessages({
+  
+      trrack.apply("updateMessages", actions.updateMessages({
         messages: [...messages, userMessage, assistantMessage],
       }));
-
-      // Update provenance state
+  
       setAnswer({
         status: true,
         provenanceGraph: trrack.graph.backend,
@@ -222,17 +224,15 @@ export default function ChatInterface(
           messages: JSON.stringify([...messages, userMessage, assistantMessage]),
         },
       });
-
-      // Store messages in localStorage for data collection
-      // const allMessages = [...messages, userMessage, assistantMessage];
-      // localStorage.setItem(`chat_${participantId}_${chartType}`, JSON.stringify(allMessages));
+  
     } catch (err) {
-      console.error('Error getting LLM response:', err);
-      setError(err instanceof Error ? err.message : 'Failed to get response. Please try again.');
+      console.error("Error getting LLM response:", err);
+      setError(err instanceof Error ? err.message : "Failed to get response. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
+  
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
