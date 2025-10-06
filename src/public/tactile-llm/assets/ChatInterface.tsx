@@ -152,6 +152,7 @@ export default function ChatInterface(
           role: "system",
           content: [{ type: "input_text", text: `Summary of earlier conversation:\n${shortSummary}` }],
         });
+        console.log("shortSummary:", shortSummary);
       }
     
       recent.forEach((m) => {
@@ -333,7 +334,7 @@ export default function ChatInterface(
       const fullMessages = [...messages, userMessage, assistantMessage];
 
       // Summarize older messages if chat too long
-      if (fullMessages.length > 10) {
+      if (fullMessages.length > 5) {
         const oldPart = fullMessages.slice(0, -6); // summarize older ones, keep last 6
         await summarizeHistory(oldPart);
       }
