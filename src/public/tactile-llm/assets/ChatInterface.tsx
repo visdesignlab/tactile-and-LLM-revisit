@@ -90,8 +90,9 @@ export default function ChatInterface(
     },
   ], [chartType, prePrompt, testSystemPrompt]);
 
-  // Local React states for chat
+  // Local React states for chat history
   const [messages, setMessages] = useState<ChatMessage[]>([...initialMessages]);
+  const [shortSummary, setShortSummary] = useState<string>(""); // short summary of the old conversation
 
   // Load existing provenance state
   useEffect(() => {
@@ -107,6 +108,69 @@ export default function ChatInterface(
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+
+
+    // ---------- Compact session memory ----------
+
+    async function summarizeHistory(oldMessages: ChatMessage[]) {
+      const summaryPrompt = `
+      Summarize the following conversation between the user and assistant.
+      Capture important facts, conclusions, and tone, but omit greetings or filler.
+    
+      Conversation:
+      ${oldMessages.map(m => `${m.role}: ${m.content}`).join("\n")}
+      `;
+    
+      const resp = await fetch(`${import.meta.env.VITE_OPENAI_API_URL}/v1/responses`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          input: [{ role: "system", content: [{ type: "input_text", text: summaryPrompt }] }],
+          max_output_tokens: 250,
+          temperature: 0.3,
+        }),
+      });
+    
+      const data = await resp.json();
+      const text = data.output?.[0]?.content?.[0]?.text || "";
+      setShortSummary(prev => prev ? `${prev}\n${text}` : text);
+    }
+
+    const getCompactContext = (msgList: ChatMessage[]) => {
+      const recent = msgList.slice(-5);
+      const context = [];
+    
+      context.push({
+        role: "system",
+        content: [{ type: "input_text", text: initialMessages[0].content }],
+      });
+    
+      if (shortSummary) {
+        context.push({
+          role: "system",
+          content: [{ type: "input_text", text: `Summary of earlier conversation:\n${shortSummary}` }],
+        });
+      }
+    
+      recent.forEach((m) => {
+        if (m.role === "assistant") {
+          context.push({
+            role: "assistant",
+            content: [{ type: "output_text", text: m.content }],
+          });
+        } else {
+          context.push({
+            role: m.role,
+            content: [{ type: "input_text", text: m.content }],
+          });
+        }
+      });
+    
+      return context;
+    };
+    
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -155,20 +219,8 @@ export default function ChatInterface(
   
       // Build input for Responses API
       const inputPayload = [
-        // System role
-        {
-          role: "system",
-          content: [{ type: "input_text", text: initialMessages[0].content }],
-        },
-  
-        // Only include prior user/system messages
-        ...messages
-          .filter((msg) => msg.role !== "assistant")
-          .map((msg) => ({
-            role: msg.role,
-            content: [{ type: "input_text", text: msg.content }],
-          })),
-  
+        // Context
+        ...getCompactContext(messages),
         // Current user turn (with CSV + image)
         {
           role: "user",
@@ -199,7 +251,7 @@ export default function ChatInterface(
             stream: true,
             input: inputPayload,
             temperature: 0.7,
-            max_output_tokens: 500,
+            max_output_tokens: 100,
           }),
         }
       );
@@ -277,19 +329,26 @@ export default function ChatInterface(
       }
       
 
-      console.log("messages:", messages);
-      console.log("userMessage:", userMessage);
-      console.log("assistantMessage:", assistantMessage);
+      // Add the new messages
+      const fullMessages = [...messages, userMessage, assistantMessage];
+
+      // Summarize older messages if chat too long
+      if (fullMessages.length > 10) {
+        const oldPart = fullMessages.slice(0, -6); // summarize older ones, keep last 6
+        await summarizeHistory(oldPart);
+      }
   
       trrack.apply("updateMessages", actions.updateMessages({
-        messages: [...messages, userMessage, assistantMessage]
+        // messages: [...messages, userMessage, assistantMessage]
+        messages: fullMessages
       }));
   
       setAnswer({
         status: true,
         provenanceGraph: trrack.graph.backend,
         answers: {
-          messages: JSON.stringify([...messages, userMessage, assistantMessage]),
+          // messages: JSON.stringify([...messages, userMessage, assistantMessage]),
+          messages: JSON.stringify(fullMessages),
         },
       });
   
