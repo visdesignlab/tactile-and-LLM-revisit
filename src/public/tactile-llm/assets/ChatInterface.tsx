@@ -15,12 +15,13 @@ import {
   rem,
   Box,
 } from '@mantine/core';
-import { initializeTrrack, Registry } from '@trrack/core';
 import { ChatMessage, ChatProvenanceState } from './types';
 import { StimulusParams } from '../../../store/types';
+import { Trrack } from '@trrack/core';
+import { ActionCreatorWithPayload } from '@reduxjs/toolkit';
 
 export default function ChatInterface(
-  { modality, chartType, setAnswer, provenanceState, testSystemPrompt, onClose }:
+  { modality, chartType, setAnswer, provenanceState, testSystemPrompt, onClose, trrack, actions, updateProvenanceState, modalOpened }:
   {
     modality: 'tactile' | 'text',
     chartType: 'violin-plot' | 'clustered-heatmap',
@@ -28,36 +29,18 @@ export default function ChatInterface(
     provenanceState?: ChatProvenanceState,
     testSystemPrompt?: string,
     onClose?: () => void,
+    trrack: Trrack<{
+        messages: never[];
+        modalOpened: boolean;
+    }, string>,
+    actions: {
+      updateMessages: ActionCreatorWithPayload<ChatMessage[], string>;
+      modalOpened: ActionCreatorWithPayload<boolean, string>;
+    },
+    updateProvenanceState: (messages: unknown[], modalOpened: boolean) => void,
+    modalOpened: boolean,
   },
 ) {
-
-
-    // Setup provenance tracking (Trrack)
-    const { actions, trrack } = useMemo(() => {
-    const reg = Registry.create();
-
-    // Register an "updateMessages" action to update chat history state
-    const updateMessages = reg.register('brush', (state, newState: ChatProvenanceState) => {
-      // eslint-disable-next-line no-param-reassign
-      state = newState;
-      return state;
-    });
-
-    // Initialize Trrack with an empty message list
-    const trrackInst = initializeTrrack({
-      registry: reg,
-      initialState: {
-        messages: [],
-      },
-    });
-
-    return {
-      actions: {
-        updateMessages,
-      },
-      trrack: trrackInst,
-    };
-  }, []);
 
 
   // Define the system prompt
@@ -339,19 +322,17 @@ export default function ChatInterface(
         await summarizeHistory(oldPart);
       }
   
-      trrack.apply("updateMessages", actions.updateMessages({
-        // messages: [...messages, userMessage, assistantMessage]
-        messages: fullMessages
-      }));
+      trrack.apply("updateMessages", actions.updateMessages(fullMessages));
   
-      setAnswer({
-        status: true,
-        provenanceGraph: trrack.graph.backend,
-        answers: {
-          // messages: JSON.stringify([...messages, userMessage, assistantMessage]),
-          messages: JSON.stringify(fullMessages),
-        },
-      });
+      // setAnswer({
+      //   status: true,
+      //   provenanceGraph: trrack.graph.backend,
+      //   answers: {
+      //     // messages: JSON.stringify([...messages, userMessage, assistantMessage]),
+      //     messages: JSON.stringify(fullMessages),
+      //   },
+      // });
+      updateProvenanceState(fullMessages, modalOpened);
   
     } catch (err) {
       console.error("Error getting LLM response:", err);
