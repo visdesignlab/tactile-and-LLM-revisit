@@ -30,15 +30,20 @@ export default function ChatInterface(
     onClose?: () => void,
   },
 ) {
-  const { actions, trrack } = useMemo(() => {
+
+
+    // Setup provenance tracking (Trrack)
+    const { actions, trrack } = useMemo(() => {
     const reg = Registry.create();
 
+    // Register an "updateMessages" action to update chat history state
     const updateMessages = reg.register('brush', (state, newState: ChatProvenanceState) => {
       // eslint-disable-next-line no-param-reassign
       state = newState;
       return state;
     });
 
+    // Initialize Trrack with an empty message list
     const trrackInst = initializeTrrack({
       registry: reg,
       initialState: {
@@ -54,8 +59,8 @@ export default function ChatInterface(
     };
   }, []);
 
-  // console.log('testSystemPrompt:', testSystemPrompt);
 
+  // Define the system prompt
   const prePrompt = modality === 'tactile'
     ? `This is a tactile chart exploration session. You will be provided with tactile instructions to explore the chart.
     Please follow the tactile instructions carefully and ask the AI assistant any questions you have about the chart.
@@ -84,7 +89,11 @@ export default function ChatInterface(
       display: false,
     },
   ], [chartType, prePrompt, testSystemPrompt]);
+
+  // Local React states for chat
   const [messages, setMessages] = useState<ChatMessage[]>([...initialMessages]);
+
+  // Load existing provenance state
   useEffect(() => {
     if (provenanceState) {
       setMessages(provenanceState.messages);
@@ -120,6 +129,8 @@ export default function ChatInterface(
     inputRef.current?.focus();
   }, []);
 
+
+  // handleSubmit(): Triggered when the user presses Enter or clicks Send.
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
   
@@ -266,6 +277,9 @@ export default function ChatInterface(
       }
       
 
+      console.log("messages:", messages);
+      console.log("userMessage:", userMessage);
+      console.log("assistantMessage:", assistantMessage);
   
       trrack.apply("updateMessages", actions.updateMessages({
         messages: [...messages, userMessage, assistantMessage]
