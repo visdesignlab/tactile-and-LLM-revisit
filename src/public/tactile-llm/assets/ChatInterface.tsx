@@ -54,7 +54,8 @@ export default function ChatInterface(
     };
   }, []);
 
-  console.log('testSystemPrompt:', testSystemPrompt);
+  // console.log('testSystemPrompt:', testSystemPrompt);
+
   const prePrompt = modality === 'tactile'
     ? `This is a tactile chart exploration session. You will be provided with tactile instructions to explore the chart.
     Please follow the tactile instructions carefully and ask the AI assistant any questions you have about the chart.
@@ -187,7 +188,7 @@ export default function ChatInterface(
             stream: true,
             input: inputPayload,
             temperature: 0.7,
-            max_output_tokens: 100,
+            max_output_tokens: 500,
           }),
         }
       );
@@ -267,7 +268,7 @@ export default function ChatInterface(
 
   
       trrack.apply("updateMessages", actions.updateMessages({
-        messages: [...messages, userMessage, assistantMessage],
+        messages: [...messages, userMessage, assistantMessage]
       }));
   
       setAnswer({
