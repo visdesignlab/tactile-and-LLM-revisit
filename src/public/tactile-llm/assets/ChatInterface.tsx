@@ -19,6 +19,8 @@ import { ChatMessage, ChatProvenanceState } from './types';
 import { StimulusParams } from '../../../store/types';
 import { Trrack } from '@trrack/core';
 import { ActionCreatorWithPayload } from '@reduxjs/toolkit';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 export default function ChatInterface(
   { modality, chartType, setAnswer, provenanceState, testSystemPrompt, onClose, trrack, actions, updateProvenanceState, modalOpened }:
@@ -384,7 +386,37 @@ export default function ChatInterface(
                     color: message.role === 'user' ? '#fff' : '#212529',
                   }}
                 >
-                  <Text size="sm">{message.content}</Text>
+                {message.role === 'assistant' ? (
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    p: ({ node, ...props }) => <Text size="sm" {...props} />,
+                    li: ({ node, ...props }) => (
+                      <li style={{ marginLeft: 16 }} {...props} />
+                    ),
+                    code: ({ inline, children, ...props }: any) => (
+                      <code
+                        style={{
+                          backgroundColor: inline ? '#e9ecef' : '#f1f3f5',
+                          borderRadius: 4,
+                          padding: inline ? '2px 4px' : '8px',
+                          display: inline ? 'inline' : 'block',
+                          overflowX: 'auto',
+                          fontFamily: 'monospace',
+                          color: '#212529',
+                        }}
+                        {...props}
+                      >
+                        {children}
+                      </code>
+                    ),
+                  }}
+                >
+                  {message.content}
+                </ReactMarkdown>
+              ) : (
+                <Text size="sm">{message.content}</Text>
+              )}
                   <Text size="xs" mt={4} color={message.role === 'user' ? 'blue.1' : 'gray.6'}>
                     {new Date(message.timestamp).toLocaleTimeString()}
                   </Text>
