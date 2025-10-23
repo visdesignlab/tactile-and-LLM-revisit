@@ -14,6 +14,7 @@ export default function LLMInterface({ parameters, setAnswer, answers, provenanc
   function setModal(open: boolean) {
     trrack.apply('modalOpened', actions.modalOpened(open));
     setIsModalOpen(open);
+    updateProvenanceState([], open);
   }
 
   // Handle keyboard events

@@ -23,7 +23,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 export default function ChatInterface(
-  { modality, chartType, setAnswer, provenanceState, testSystemPrompt, onClose, trrack, actions, updateProvenanceState, modalOpened }:
+  { modality, chartType, setAnswer, provenanceState, testSystemPrompt, onClose, trrack, actions, updateProvenanceState, modalOpened, onMessagesUpdate }:
   {
     modality: 'tactile' | 'text',
     chartType: 'violin-plot' | 'clustered-heatmap',
@@ -41,6 +41,7 @@ export default function ChatInterface(
     },
     updateProvenanceState: (messages: unknown[], modalOpened: boolean) => void,
     modalOpened: boolean,
+    onMessagesUpdate?: (messages: ChatMessage[]) => void,
   },
 ) {
 
@@ -87,6 +88,13 @@ export default function ChatInterface(
       setMessages([...initialMessages]);
     }
   }, [provenanceState, initialMessages]);
+
+  // Update parent component when messages change
+  useEffect(() => {
+    if (onMessagesUpdate) {
+      onMessagesUpdate(messages);
+    }
+  }, [messages, onMessagesUpdate]);
 
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
