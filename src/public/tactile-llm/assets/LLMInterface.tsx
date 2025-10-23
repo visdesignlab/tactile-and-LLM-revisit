@@ -10,12 +10,17 @@ export default function LLMInterface({ parameters, setAnswer, answers, provenanc
   console.log('LLMInterface answers:', answers.prePrompt_1.answer["q-prePrompt"]);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [fullMessages, setFullMessages] = useState<ChatMessage[]>([]);
 
   function setModal(open: boolean) {
     trrack.apply('modalOpened', actions.modalOpened(open));
     setIsModalOpen(open);
-    updateProvenanceState([], open);
+    updateProvenanceState(fullMessages, open);
   }
+
+  const handleMessagesUpdate = useCallback((messages: ChatMessage[]) => {
+    setFullMessages(messages);
+  }, []);
 
   // Handle keyboard events
   useEffect(() => {
@@ -117,6 +122,7 @@ export default function LLMInterface({ parameters, setAnswer, answers, provenanc
           actions={actions as any}
           updateProvenanceState={updateProvenanceState}
           modalOpened={isModalOpen}
+          onMessagesUpdate={handleMessagesUpdate}
         />
       </Modal>
     </>
