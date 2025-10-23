@@ -38,9 +38,8 @@ export default function LLMInterface({ parameters, setAnswer, answers, provenanc
     const reg = Registry.create();
 
     // Register an "updateMessages" action to update chat history state
-    const updateMessages = reg.register('brush', (state, newState: ChatMessage[]) => {
-      // eslint-disable-next-line no-param-reassign
-      state = newState;
+    const updateMessages = reg.register('brush', (state, newMessages: ChatMessage[]) => {
+      state.messages = newMessages;
       return state;
     });
 
