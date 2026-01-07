@@ -41,9 +41,27 @@
       }
     ]
   },
-    "testComponent": {
+    "learn": {
       "type": "react-component",
       "path": "tactile-llm/assets/LLMInterface.tsx",
+      "response": [],
+      "parameters": {
+        "chartType": "violin-plot",
+        "modality": "tactile"
+      }
+    },
+    "simpleAltText": {
+      "type": "react-component",
+      "path": "tactile-llm/assets/LLMInterfaceSimpleAltText.tsx",
+      "response": [],
+      "parameters": {
+        "chartType": "violin-plot",
+        "modality": "tactile"
+      }
+    },
+    "test": {
+      "type": "react-component",
+      "path": "tactile-llm/assets/LLMInterfaceTest.tsx",
       "response": [],
       "parameters": {
         "chartType": "violin-plot",
@@ -56,7 +74,9 @@
     "components": [
       "introduction",
       "prePrompt",
-      "testComponent"
+      "learn",
+      "simpleAltText",
+      "test"
     ]
   }
 }
