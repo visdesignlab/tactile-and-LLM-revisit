@@ -227,7 +227,7 @@ export default function ChatInterfaceSimpleAltText(
             stream: true,
             input: inputPayload,
             temperature: 0.7,
-            max_output_tokens: 100,
+            max_output_tokens: 400,
           }),
         }
       );
