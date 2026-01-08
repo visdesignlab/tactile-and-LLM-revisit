@@ -24,6 +24,11 @@
     "windowEventDebounceTime": 200
   },
   "components": {
+    "introduction": {
+      "type": "markdown",
+      "path": "tactile-llm/assets/introduction.md",
+      "response": []
+    },
     "prePrompt": {
       "type": "markdown",
       "path": "tactile-llm/assets/systemPrompt.md",
@@ -69,6 +74,7 @@
   "sequence": {
     "order": "fixed",
     "components": [
+      "introduction",
       "prePrompt",
       "learn",
       "simpleAltText",
