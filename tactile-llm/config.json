@@ -30,14 +30,16 @@
       "response": []
     },
     "prePrompt": {
-      "type": "questionnaire",
+      "type": "markdown",
+      "path": "tactile-llm/assets/systemPrompt.md",
       "response": [
       {
           "id": "q-prePrompt",
-          "prompt": "System Prompt",
-          "location": "aboveStimulus",
+          "prompt": "Test Different System Prompts (This question is only for the Chart Learning Chatbot). It will be removed in the real study.",
+          "location": "belowStimulus",
           "type": "longText",
-          "placeholder": "Please enter the system prompt for the LLM."
+          "placeholder": "Please enter the system prompt for the LLM.",
+          "required": false
       }
     ]
   },
