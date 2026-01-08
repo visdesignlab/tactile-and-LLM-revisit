@@ -30,7 +30,7 @@ export default function InstructionsDisplayTest({ chartType, modality, onOpenCha
 
         // Determine which instruction file to load
         const instructionType = modality === 'tactile' ? 'tactile' : 'text';
-        const fileName = `${chartType}_instructions_${instructionType}.md`;
+        const fileName = `${chartType}_alt-text_complex.md`;
 
         // In production, this would fetch from an API
         // For now, we'll simulate loading the content
@@ -108,7 +108,7 @@ Read through the instructions and ask the AI assistant any questions you have ab
     <>
       <Flex direction="column" mb="md">
         <Flex justify="space-between" align="center">
-          <div>
+          {/* <div>
             <Text size="xl" fw={700}>
               {modality === 'tactile' ? 'Tactile Chart Instructions' : 'Chart Explanation'}
             </Text>
@@ -117,7 +117,7 @@ Read through the instructions and ask the AI assistant any questions you have ab
                 ? 'Follow these tactile exploration instructions to learn about the chart'
                 : 'Read this explanation to understand the chart type'}
             </Text>
-          </div>
+          </div> */}
           {onOpenChat && (
             <Button
               variant="outline"
