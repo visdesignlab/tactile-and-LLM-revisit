@@ -46,35 +46,17 @@ export default function ChatInterfaceSimpleAltText(
 ) {
 
 
-  // Define the system prompt
-  const prePrompt = modality === 'tactile'
-    ? `This is a tactile chart exploration session. You will be provided with tactile instructions to explore the chart.
-    Please follow the tactile instructions carefully and ask the AI assistant any questions you have about the chart.
-    
-    IMPORTANT: You will receive both the CSV data and the visual image for the chart. Use them to:
-    1. Analyze the CSV data to understand the underlying data structure, statistics, and relationships
-    2. Interpret the visual image to understand how the data is represented graphically
-    3. Combine both data and visual analysis to provide comprehensive, accurate answers
-    4. When appropriate, suggest Python code examples for data analysis
-    5. Help participants understand the connection between the raw data and the visual representation`
-    : `This is a text-based learning session about ${chartType.replace('-', ' ')} charts.
-    You will receive text instructions to help you understand the chart. Feel free to ask the AI assistant any questions you have about the chart.
-    
-    IMPORTANT: You will receive both the CSV data and the visual image for the chart. Use them to:
-    1. Analyze the CSV data to understand the underlying data structure, statistics, and relationships
-    2. Interpret the visual image to understand how the data is represented graphically
-    3. Combine both data and visual analysis to provide comprehensive, accurate answers
-    4. When appropriate, suggest Python code examples for data analysis
-    5. Help participants understand the connection between the raw data and the visual representation`;
+    // Define the system prompt
+    const prePrompt = `You are an accessibility assistant for a blind user. Your job is to help the user understand and extract information from a data visualization. You will be given: (1) the visualization as a PDF (which may contain vector graphics and selectable text), and (2) the underlying dataset as a CSV file.`;
 
   const initialMessages: ChatMessage[] = useMemo(() => [
     {
       role: 'system',
-      content: testSystemPrompt || `${prePrompt}`,
+      content: `${prePrompt}`,
       timestamp: new Date().getTime(),
       display: false,
     },
-  ], [chartType, prePrompt, testSystemPrompt]);
+  ], [chartType, prePrompt]);
 
   // Local React states for chat history
   const [messages, setMessages] = useState<ChatMessage[]>([...initialMessages]);

@@ -48,24 +48,25 @@ export default function ChatInterface(
 
   // Define the system prompt
   const prePrompt = modality === 'tactile'
-    ? `This is a tactile chart exploration session. You will be provided with tactile instructions to explore the chart.
-    Please follow the tactile instructions carefully and ask the AI assistant any questions you have about the chart.
-    
-    IMPORTANT: You will receive both the CSV data and the visual image for the chart. Use them to:
-    1. Analyze the CSV data to understand the underlying data structure, statistics, and relationships
-    2. Interpret the visual image to understand how the data is represented graphically
-    3. Combine both data and visual analysis to provide comprehensive, accurate answers
-    4. When appropriate, suggest Python code examples for data analysis
-    5. Help participants understand the connection between the raw data and the visual representation`
-    : `This is a text-based learning session about ${chartType.replace('-', ' ')} charts.
-    You will receive text instructions to help you understand the chart. Feel free to ask the AI assistant any questions you have about the chart.
-    
-    IMPORTANT: You will receive both the CSV data and the visual image for the chart. Use them to:
-    1. Analyze the CSV data to understand the underlying data structure, statistics, and relationships
-    2. Interpret the visual image to understand how the data is represented graphically
-    3. Combine both data and visual analysis to provide comprehensive, accurate answers
-    4. When appropriate, suggest Python code examples for data analysis
-    5. Help participants understand the connection between the raw data and the visual representation`;
+    ? `
+You are an accessibility-focused AI tutor helping a blind user learn and query an example **${chartType.replace('-', ' ')}** chart.
+
+You are given:
+1) The chart image (visual rendering of the example chart).
+2) The underlying dataset as dataset.csv for the same example.
+
+
+The user is blind and has the tactile version of this example chart. They will explore it by touch and ask questions.
+`
+    : `
+You are an accessibility-focused AI tutor helping a blind user learn and query an example **${chartType.replace('-', ' ')}** chart.
+
+You are given:
+1) The chart image (visual rendering of the example chart).
+2) The underlying dataset as dataset.csv for the same example.
+
+The user is blind and will learn from the textual explanation and ask questions.
+`;
 
   const initialMessages: ChatMessage[] = useMemo(() => [
     {

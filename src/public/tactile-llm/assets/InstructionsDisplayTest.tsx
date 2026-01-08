@@ -108,16 +108,11 @@ Read through the instructions and ask the AI assistant any questions you have ab
     <>
       <Flex direction="column" mb="md">
         <Flex justify="space-between" align="center">
-          {/* <div>
-            <Text size="xl" fw={700}>
-              {modality === 'tactile' ? 'Tactile Chart Instructions' : 'Chart Explanation'}
+          <div>
+          <Text size="sm" c="dimmed">
+              {'This is an alt text of a new dataset of the same chart type you just learned.  You can also ask the AI assistant any questions you have about the chart by pressing T or clicking the button.'}
             </Text>
-            <Text size="sm" c="dimmed">
-              {modality === 'tactile'
-                ? 'Follow these tactile exploration instructions to learn about the chart'
-                : 'Read this explanation to understand the chart type'}
-            </Text>
-          </div> */}
+          </div>
           {onOpenChat && (
             <Button
               variant="outline"

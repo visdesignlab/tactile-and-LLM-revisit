@@ -47,34 +47,16 @@ export default function ChatInterfaceTest(
 
 
   // Define the system prompt
-  const prePrompt = modality === 'tactile'
-    ? `This is a tactile chart exploration session. You will be provided with tactile instructions to explore the chart.
-    Please follow the tactile instructions carefully and ask the AI assistant any questions you have about the chart.
-    
-    IMPORTANT: You will receive both the CSV data and the visual image for the chart. Use them to:
-    1. Analyze the CSV data to understand the underlying data structure, statistics, and relationships
-    2. Interpret the visual image to understand how the data is represented graphically
-    3. Combine both data and visual analysis to provide comprehensive, accurate answers
-    4. When appropriate, suggest Python code examples for data analysis
-    5. Help participants understand the connection between the raw data and the visual representation`
-    : `This is a text-based learning session about ${chartType.replace('-', ' ')} charts.
-    You will receive text instructions to help you understand the chart. Feel free to ask the AI assistant any questions you have about the chart.
-    
-    IMPORTANT: You will receive both the CSV data and the visual image for the chart. Use them to:
-    1. Analyze the CSV data to understand the underlying data structure, statistics, and relationships
-    2. Interpret the visual image to understand how the data is represented graphically
-    3. Combine both data and visual analysis to provide comprehensive, accurate answers
-    4. When appropriate, suggest Python code examples for data analysis
-    5. Help participants understand the connection between the raw data and the visual representation`;
+  const prePrompt = `You are an accessibility assistant for a blind user. Your job is to help the user understand and extract information from a data visualization. You will be given: (1) the visualization as a PDF (which may contain vector graphics and selectable text), and (2) the underlying dataset as a CSV file.`;
 
   const initialMessages: ChatMessage[] = useMemo(() => [
     {
       role: 'system',
-      content: testSystemPrompt || `${prePrompt}`,
+      content: `${prePrompt}`,
       timestamp: new Date().getTime(),
       display: false,
     },
-  ], [chartType, prePrompt, testSystemPrompt]);
+  ], [chartType, prePrompt]);
 
   // Local React states for chat history
   const [messages, setMessages] = useState<ChatMessage[]>([...initialMessages]);
@@ -208,7 +190,7 @@ export default function ChatInterfaceTest(
   
     try {
       // Load CSV data (small enough to inline)
-      const csvResponse = await fetch(`/tactile-llm/data/${chartType}.csv`);
+      const csvResponse = await fetch(`/tactile-llm/data/${chartType}_complex.csv`);
       const csvData = await csvResponse.text();
   
       // Build input for Responses API
@@ -224,13 +206,19 @@ export default function ChatInterfaceTest(
               type: "input_text",
               text: `Here is the CSV data for the ${chartType}:\n\n${csvData}`,
             },
+            // {
+            //   type: "input_image",
+            //   file_id:
+            //     chartType === "violin-plot"
+            //       ? "file-LdLXQDKEmyLUxgCmVPxFFj" // File ID for Violin Plot
+            //       : "file-RndV3st6F83sM7y9SKDDkW", // File ID for Clustered Heatmap
+            // },
             {
-              type: "input_image",
-              file_id:
-                chartType === "violin-plot"
-                  ? "file-LdLXQDKEmyLUxgCmVPxFFj" // File ID for Violin Plot
-                  : "file-RndV3st6F83sM7y9SKDDkW", // File ID for Clustered Heatmap
-            },
+              type: "input_file",
+              file_id: chartType === "violin-plot"
+                ? "file-FU7Y3j8xkBy7hK3C8Hecru"
+                : "file-UVyfi6BmPK5m7KTmZPhqdd",
+            }
           ],
         },
       ];
@@ -245,7 +233,7 @@ export default function ChatInterfaceTest(
             stream: true,
             input: inputPayload,
             temperature: 0.7,
-            max_output_tokens: 100,
+            max_output_tokens: 400,
           }),
         }
       );

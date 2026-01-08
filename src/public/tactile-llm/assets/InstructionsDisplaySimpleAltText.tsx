@@ -108,16 +108,11 @@ Read through the instructions and ask the AI assistant any questions you have ab
     <>
       <Flex direction="column" mb="md">
         <Flex justify="space-between" align="center">
-          {/* <div>
-            <Text size="xl" fw={700}>
-              {modality === 'tactile' ? 'Tactile Chart Instructions' : 'Chart Explanation'}
-            </Text>
+          <div>
             <Text size="sm" c="dimmed">
-              {modality === 'tactile'
-                ? 'Follow these tactile exploration instructions to learn about the chart'
-                : 'Read this explanation to understand the chart type'}
+              {'This is an example of alt text, which describes the chart used in the instruction you just heard.  You can also ask the AI assistant any questions you have about the chart by pressing T or clicking the button.'}
             </Text>
-          </div> */}
+          </div>
           {onOpenChat && (
             <Button
               variant="outline"
@@ -125,7 +120,7 @@ Read through the instructions and ask the AI assistant any questions you have ab
               onClick={onOpenChat}
               size="sm"
             >
-              Press 'T' or click to open AI Chat
+              Open AI Chat
             </Button>
           )}
         </Flex>

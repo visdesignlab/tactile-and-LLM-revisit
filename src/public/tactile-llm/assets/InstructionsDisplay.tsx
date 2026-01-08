@@ -114,8 +114,8 @@ Read through the instructions and ask the AI assistant any questions you have ab
             </Text>
             <Text size="sm" c="dimmed">
               {modality === 'tactile'
-                ? 'Follow these tactile exploration instructions to learn about the chart'
-                : 'Read this explanation to understand the chart type'}
+                ? 'Follow these tactile exploration instructions to learn about the chart. You can also ask the AI assistant any questions you have about the chart by pressing T or clicking the button.'
+                : 'Read this explanation to understand the chart type. You can also ask the AI assistant any questions you have about the chart by pressing T or clicking the button.'}
             </Text>
           </div>
           {onOpenChat && (
@@ -125,7 +125,7 @@ Read through the instructions and ask the AI assistant any questions you have ab
               onClick={onOpenChat}
               size="sm"
             >
-              Press 'T' or click to open AI Chat
+              Open AI Chat
             </Button>
           )}
         </Flex>
