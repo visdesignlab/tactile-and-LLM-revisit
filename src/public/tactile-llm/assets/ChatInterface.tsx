@@ -229,8 +229,8 @@ The user is blind and will learn from the textual explanation and ask questions.
               type: "input_image",
               file_id:
                 chartType === "violin-plot"
-                  ? "file-LdLXQDKEmyLUxgCmVPxFFj" // File ID for Violin Plot
-                  : "file-RndV3st6F83sM7y9SKDDkW", // File ID for Clustered Heatmap
+                  ? "file-NnvHu4fUdz5oeqkTxJkRSz" // File ID for Violin Plot - Template Chart
+                  : "file-2jqhMr5MJe3bxfvXeaJYpd", // File ID for Clustered Heatmap - Template Chart
             },
           ],
         },

@@ -206,13 +206,13 @@ export default function ChatInterfaceTest(
               type: "input_text",
               text: `Here is the CSV data for the ${chartType}:\n\n${csvData}`,
             },
-            // {
-            //   type: "input_image",
-            //   file_id:
-            //     chartType === "violin-plot"
-            //       ? "file-LdLXQDKEmyLUxgCmVPxFFj" // File ID for Violin Plot
-            //       : "file-RndV3st6F83sM7y9SKDDkW", // File ID for Clustered Heatmap
-            // },
+            {
+              type: "input_image",
+              file_id:
+                chartType === "violin-plot"
+                  ? "file-NiSf9xDPgv21d6dTzFxaqH" // File ID for Violin Plot - Complex Chart
+                  : "file-AXbDvppNy7Fy6NmwrcaE3p", // File ID for Clustered Heatmap - Complex Chart
+            },
             {
               type: "input_file",
               file_id: chartType === "violin-plot"
