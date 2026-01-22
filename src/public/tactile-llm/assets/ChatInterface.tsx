@@ -438,9 +438,9 @@ How to respond:
               ) : (
                 <Text size="sm">{message.content}</Text>
               )}
-                  <Text size="xs" mt={4} color={message.role === 'user' ? 'blue.1' : 'gray.6'}>
+                  {/* <Text size="xs" mt={4} color={message.role === 'user' ? 'blue.1' : 'gray.6'}>
                     {new Date(message.timestamp).toLocaleTimeString()}
-                  </Text>
+                  </Text> */}
                 </Paper>
               </Flex>
             ))}
