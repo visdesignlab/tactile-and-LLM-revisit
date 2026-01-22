@@ -34,9 +34,11 @@ export function RadioInput({
     leftLabel,
     rightLabel,
     secondaryText,
+    infoText,
     horizontal,
     withOther,
     options,
+    labelLocation,
   } = response;
 
   const storedAnswer = useStoredAnswer();
@@ -47,20 +49,27 @@ export function RadioInput({
   const [otherSelected, setOtherSelected] = useState(false);
 
   const error = useMemo(() => generateErrorMessage(response, answer, orderedOptions), [response, answer, orderedOptions]);
+  const label = useMemo(() => ((horizontal && labelLocation) ? labelLocation : 'inline'), [labelLocation, horizontal]);
 
   return (
     <Radio.Group
       name={`radioInput${response.id}`}
-      label={prompt.length > 0 && <InputLabel prompt={prompt} required={required} index={index} enumerateQuestions={enumerateQuestions} />}
+      label={prompt.length > 0 && <InputLabel prompt={prompt} required={required} index={index} enumerateQuestions={enumerateQuestions} infoText={infoText} />}
       description={secondaryText}
       key={response.id}
       {...answer}
-      // This overrides the answers error. Which..is bad?
       error={error}
+      errorProps={{ c: required ? 'red' : 'orange' }}
       style={{ '--input-description-size': 'calc(var(--mantine-font-size-md) - calc(0.125rem * var(--mantine-scale)))' }}
     >
+      {horizontal && label === 'above' && (leftLabel || rightLabel) && (
+        <Group gap="lg" justify="space-between" mt={0}>
+          {leftLabel && <Text>{leftLabel}</Text>}
+          {rightLabel && <Text>{rightLabel}</Text>}
+        </Group>
+      )}
       <Group gap="lg" align="flex-end" mt={horizontal ? 0 : 'sm'}>
-        {leftLabel ? <Text>{leftLabel}</Text> : null}
+        {horizontal && label === 'inline' && leftLabel && <Text>{leftLabel}</Text>}
         <HorizontalHandler horizontal={!!horizontal} style={{ flexGrow: 1 }}>
           {orderedOptions.map((radio) => (
             <div
@@ -117,7 +126,7 @@ export function RadioInput({
           </div>
           )}
         </HorizontalHandler>
-        <Text>{rightLabel}</Text>
+        {horizontal && label === 'inline' && rightLabel && <Text>{rightLabel}</Text>}
       </Group>
       {horizontal && withOther && (
         <Input
@@ -128,6 +137,12 @@ export function RadioInput({
           w={216}
           classNames={{ input: inputClasses.fixDisabled }}
         />
+      )}
+      {horizontal && label === 'below' && (leftLabel || rightLabel) && (
+        <Group gap="lg" justify="space-between" mt="sm">
+          {leftLabel && <Text>{leftLabel}</Text>}
+          {rightLabel && <Text>{rightLabel}</Text>}
+        </Group>
       )}
     </Radio.Group>
   );

@@ -5,8 +5,9 @@ import { ParticipantMetadata, StudyConfig } from '../../parser/types';
 import testConfigSimple from './testConfigSimple.json';
 import { generateSequenceArray } from '../../utils/handleRandomSequences';
 import { LocalStorageEngine } from '../engines/LocalStorageEngine';
-import { StorageEngine } from '../engines/types';
+import { StorageEngine, cleanupModes } from '../engines/types';
 import { hash } from '../engines/utils';
+
 // import { SupabaseStorageEngine } from '../engines/SupabaseStorageEngine';
 
 const studyId = 'test-study';
@@ -95,13 +96,12 @@ describe.each([
     expect(updatedHash).toBe(configHash);
   });
 
-  // _getAllSequenceAssignments test
-  test('_getAllSequenceAssignments returns sequence assignment for participant', async () => {
+  // getAllSequenceAssignments test
+  test('getAllSequenceAssignments returns sequence assignment for participant', async () => {
     const participantSession = await storageEngine.initializeParticipantSession({}, configSimple, participantMetadata);
     const { participantId } = participantSession;
 
-    // @ts-expect-error using protected method for testing
-    const sequenceAssignments = await storageEngine._getAllSequenceAssignments(studyId);
+    const sequenceAssignments = await storageEngine.getAllSequenceAssignments(studyId);
     expect(sequenceAssignments).toBeDefined();
 
     const sequenceAssignment = sequenceAssignments.find((assignment) => assignment.participantId === participantId);
@@ -120,8 +120,7 @@ describe.each([
     const participantSession = await storageEngine.initializeParticipantSession({}, configSimple, participantMetadata);
     const { participantId } = participantSession;
 
-    // @ts-expect-error using protected method for testing
-    let sequenceAssignments = await storageEngine._getAllSequenceAssignments(studyId);
+    let sequenceAssignments = await storageEngine.getAllSequenceAssignments(studyId);
     expect(sequenceAssignments).toBeDefined();
 
     const sequenceAssignment = sequenceAssignments.find((assignment) => assignment.participantId === participantId);
@@ -133,8 +132,7 @@ describe.each([
     // @ts-expect-error using protected method for testing
     await storageEngine._completeCurrentParticipantRealtime();
 
-    // @ts-expect-error using protected method for testing
-    sequenceAssignments = await storageEngine._getAllSequenceAssignments(studyId);
+    sequenceAssignments = await storageEngine.getAllSequenceAssignments(studyId);
     expect(sequenceAssignments).toBeDefined();
 
     const updatedSequenceAssignment = sequenceAssignments.find((assignment) => assignment.participantId === participantId);
@@ -152,16 +150,85 @@ describe.each([
   test('_getModes returns correct modes and _setMode updates correctly', async () => {
     const modes = await storageEngine.getModes(studyId);
     expect(modes).toBeDefined();
-    expect(modes.analyticsInterfacePubliclyAccessible).toBe(true);
+    expect(modes.dataSharingEnabled).toBe(true);
     expect(modes.dataCollectionEnabled).toBe(true);
-    expect(modes.studyNavigatorEnabled).toBe(true);
+    expect(modes.developmentModeEnabled).toBe(true);
 
     await storageEngine.setMode(studyId, 'dataCollectionEnabled', false);
     const updatedModes = await storageEngine.getModes(studyId);
     expect(updatedModes).toBeDefined();
-    expect(updatedModes.analyticsInterfacePubliclyAccessible).toBe(true);
+    expect(updatedModes.dataSharingEnabled).toBe(true);
     expect(updatedModes.dataCollectionEnabled).toBe(false);
-    expect(updatedModes.studyNavigatorEnabled).toBe(true);
+    expect(updatedModes.developmentModeEnabled).toBe(true);
+  });
+
+  // cleanupModes test
+  test('cleanupModes updates old modes to new modes', async () => {
+    const oldModes = {
+      studyNavigatorEnabled: true,
+      analyticsInterfacePubliclyAccessible: true,
+      dataCollectionEnabled: true,
+    };
+
+    const cleanedModes = {
+      developmentModeEnabled: true,
+      dataSharingEnabled: true,
+      dataCollectionEnabled: true,
+    };
+
+    const sanitizedModes = cleanupModes(oldModes);
+    expect(sanitizedModes).toBeDefined();
+    expect(sanitizedModes).toEqual(cleanedModes);
+    expect(sanitizedModes).not.toEqual(oldModes);
+
+    const oldModesFalse = {
+      studyNavigatorEnabled: false,
+      analyticsInterfacePubliclyAccessible: false,
+      dataCollectionEnabled: true,
+    };
+    const cleanedModesFalse = {
+      developmentModeEnabled: false,
+      dataSharingEnabled: false,
+      dataCollectionEnabled: true,
+    };
+
+    const sanitizedModesFalse = cleanupModes(oldModesFalse);
+    expect(sanitizedModesFalse).toBeDefined();
+    expect(sanitizedModesFalse).toEqual(cleanedModesFalse);
+    expect(sanitizedModesFalse).not.toEqual(oldModesFalse);
+
+    // pass in already cleaned modes
+    const alreadySanitizedModes = cleanupModes(cleanedModes);
+    expect(alreadySanitizedModes).toBeDefined();
+    expect(alreadySanitizedModes).toEqual(cleanedModes);
+
+    // pass in empty object
+    const emptySanitizedModes = cleanupModes({});
+    expect(emptySanitizedModes).toBeDefined();
+    expect(emptySanitizedModes).toEqual({});
+
+    // pass in an object with more fields
+    const extraModes = {
+      testField1: true,
+      testField2: false,
+    };
+
+    const extraSanitizedModes = cleanupModes({ ...extraModes, ...oldModes });
+
+    expect(extraSanitizedModes).toBeDefined();
+    expect(extraSanitizedModes).not.toEqual(oldModes);
+    expect(extraSanitizedModes).not.toEqual(cleanedModes);
+    expect(extraSanitizedModes).toEqual({ ...extraModes, ...sanitizedModes });
+
+    // pass in an object with old modes and cleaned modes
+    const mixedModes = {
+      ...oldModes,
+      ...cleanedModes,
+    };
+
+    const mixedSanitizedModes = cleanupModes(mixedModes);
+    expect(mixedSanitizedModes).toBeDefined();
+    expect(mixedSanitizedModes).toEqual(mixedModes);
   });
 
   // cannot test _getAudioUrl in local storage environment
@@ -260,13 +327,11 @@ describe.each([
     // Ensure source directory exists
     await storageEngine.initializeParticipantSession({}, configSimple, participantMetadata);
 
-    // @ts-expect-error using protected method for testing
-    const sourceSequenceAssignments1 = await storageEngine._getAllSequenceAssignments(studyId);
+    const sourceSequenceAssignments1 = await storageEngine.getAllSequenceAssignments(studyId);
     expect(sourceSequenceAssignments1).toBeDefined();
     expect(sourceSequenceAssignments1.length).toEqual(1);
 
-    // @ts-expect-error using protected method for testing
-    let targetSequenceAssignments = await storageEngine._getAllSequenceAssignments(targetId);
+    let targetSequenceAssignments = await storageEngine.getAllSequenceAssignments(targetId);
     expect(targetSequenceAssignments).toBeDefined();
     expect(targetSequenceAssignments.length).toBe(0);
 
@@ -275,13 +340,11 @@ describe.each([
     await storageEngine._copyRealtimeData(source, target);
 
     // Check if target directory has the copied data
-    // @ts-expect-error using protected method for testing
-    const sourceSequenceAssignments2 = await storageEngine._getAllSequenceAssignments(studyId);
+    const sourceSequenceAssignments2 = await storageEngine.getAllSequenceAssignments(studyId);
     expect(sourceSequenceAssignments2).toBeDefined();
     expect(sourceSequenceAssignments2.length).toEqual(1);
 
-    // @ts-expect-error using protected method for testing
-    targetSequenceAssignments = await storageEngine._getAllSequenceAssignments(targetId);
+    targetSequenceAssignments = await storageEngine.getAllSequenceAssignments(targetId);
     expect(targetSequenceAssignments).toBeDefined();
     expect(targetSequenceAssignments.length).toEqual(1);
     expect(targetSequenceAssignments[0].participantId).toBe(sourceSequenceAssignments2[0].participantId);
@@ -291,8 +354,7 @@ describe.each([
     await storageEngine._deleteRealtimeData(target);
 
     // Verify the target directory is empty
-    // @ts-expect-error using protected method for testing
-    targetSequenceAssignments = await storageEngine._getAllSequenceAssignments(targetId);
+    targetSequenceAssignments = await storageEngine.getAllSequenceAssignments(targetId);
     expect(targetSequenceAssignments).toBeDefined();
     expect(targetSequenceAssignments.length).toBe(0);
   });

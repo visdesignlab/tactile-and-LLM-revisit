@@ -24,21 +24,24 @@ import {
 import {
   useEffect, useMemo, useRef, useState,
 } from 'react';
-import { useHref } from 'react-router';
+import { useHref, useParams } from 'react-router';
 import { useCurrentComponent, useCurrentStep, useStudyId } from '../../routes/utils';
 import {
   useStoreDispatch, useStoreSelector, useStoreActions, useFlatSequence,
 } from '../../store/store';
 import { useStorageEngine } from '../../storage/storageEngineHooks';
+import { calculateProgressData } from '../../storage/engines/utils';
 import { PREFIX } from '../../utils/Prefix';
 import { getNewParticipant } from '../../utils/nextParticipant';
 import { RecordingAudioWaveform } from './RecordingAudioWaveform';
 import { studyComponentToIndividualComponent } from '../../utils/handleComponentInheritance';
+import { useRecordingContext } from '../../store/hooks/useRecording';
 
-export function AppHeader({ studyNavigatorEnabled, dataCollectionEnabled }: { studyNavigatorEnabled: boolean; dataCollectionEnabled: boolean }) {
+export function AppHeader({ developmentModeEnabled, dataCollectionEnabled }: { developmentModeEnabled: boolean; dataCollectionEnabled: boolean }) {
   const studyConfig = useStoreSelector((state) => state.config);
 
   const answers = useStoreSelector((state) => state.answers);
+  const storageEngineFailedToConnect = useStoreSelector((state) => state.storageEngineFailedToConnect);
   const flatSequence = useFlatSequence();
   const storeDispatch = useStoreDispatch();
   const { toggleShowHelpText, toggleStudyBrowser, incrementHelpCounter } = useStoreActions();
@@ -78,8 +81,11 @@ export function AppHeader({ studyNavigatorEnabled, dataCollectionEnabled }: { st
 
   const titleRef = useRef<HTMLHeadingElement | null>(null);
   const [isTruncated, setIsTruncated] = useState(false);
+  const lastProgressRef = useRef<number>(0);
 
-  const isRecording = useStoreSelector((store) => store.isRecording);
+  const { isScreenRecording, isAudioRecording } = useRecordingContext();
+
+  const { funcIndex } = useParams();
 
   useEffect(() => {
     const element = titleRef.current;
@@ -87,6 +93,42 @@ export function AppHeader({ studyNavigatorEnabled, dataCollectionEnabled }: { st
       setIsTruncated(element.scrollWidth > element.offsetWidth);
     }
   }, [studyConfig]);
+
+  // Update progress data in Firebase when progress changes
+  useEffect(() => {
+    if (studyConfig && storageEngine && dataCollectionEnabled) {
+      const progressData = calculateProgressData(
+        answers,
+        flatSequence,
+        studyConfig,
+        currentStep,
+        funcIndex,
+      );
+
+      // Calculate progress percentage for comparison
+      const currentProgressPercent = progressData.total > 0 ? (progressData.answered.length / progressData.total) * 100 : 0;
+
+      // Only update if progress has changed, is greater than 0, and we have a valid progress value
+      if (currentProgressPercent !== lastProgressRef.current && currentProgressPercent > 0 && !Number.isNaN(currentProgressPercent)) {
+        lastProgressRef.current = currentProgressPercent;
+        storageEngine.updateProgressData(progressData).catch((error: unknown) => {
+          console.warn('Failed to update progress data:', error);
+        });
+      }
+    }
+  }, [answers, flatSequence, studyConfig, currentStep, storageEngine, dataCollectionEnabled, funcIndex]);
+
+  // Check if we have issues connecting to the database, if so show alert modal
+  const { setAlertModal } = useStoreActions();
+  const [firstMount, setFirstMount] = useState(true);
+  if (storageEngineFailedToConnect && firstMount) {
+    storeDispatch(setAlertModal({
+      show: true,
+      message: `You may be behind a firewall blocking access, or the server collecting data may be down. Study data will not be saved. If you're taking the study you will not be compensated for your efforts. You are welcome to look around. If you are attempting to participate in the study, please email ${studyConfig.uiConfig.contactEmail} for assistance.`,
+      title: 'Failed to connect to the storage engine',
+    }));
+    setFirstMount(false);
+  }
 
   return (
     <AppShell.Header className="header" p="md">
@@ -117,13 +159,19 @@ export function AppHeader({ studyNavigatorEnabled, dataCollectionEnabled }: { st
 
         <Grid.Col span={4}>
           <Group wrap="nowrap" justify="right">
-            {isRecording ? (
-              <Group ml="xl" gap={20} wrap="nowrap">
-                <Text color="red">Recording audio</Text>
-                <RecordingAudioWaveform />
-              </Group>
-            ) : null}
-            {!dataCollectionEnabled && <Tooltip multiline withArrow arrowSize={6} w={300} label="This is a demo version of the study, we’re not collecting any data."><Badge size="lg" color="orange">Demo Mode</Badge></Tooltip>}
+            {(isAudioRecording || isScreenRecording) && (
+            <Group ml="xl" gap={20} wrap="nowrap">
+              <Text c="red">
+                Recording
+                {isScreenRecording && ' screen'}
+                {isScreenRecording && isAudioRecording && ' and'}
+                {isAudioRecording && ' audio'}
+              </Text>
+              {isAudioRecording && <RecordingAudioWaveform />}
+            </Group>
+            )}
+            {storageEngineFailedToConnect && <Tooltip multiline withArrow arrowSize={6} w={300} label="Failed to connect to the storage engine. Study data will not be saved. Check your connection or restart the app."><Badge size="lg" color="red">Storage Disconnected</Badge></Tooltip>}
+            {!storageEngineFailedToConnect && !dataCollectionEnabled && <Tooltip multiline withArrow arrowSize={6} w={300} label="This is a demo version of the study, we’re not collecting any data."><Badge size="lg" color="orange">Demo Mode</Badge></Tooltip>}
             {studyConfig?.uiConfig.helpTextPath !== undefined && (
               <Button
                 variant="outline"
@@ -146,7 +194,7 @@ export function AppHeader({ studyNavigatorEnabled, dataCollectionEnabled }: { st
                 </ActionIcon>
               </Menu.Target>
               <Menu.Dropdown>
-                {studyNavigatorEnabled && (
+                {developmentModeEnabled && (
                   <Menu.Item
                     leftSection={<IconSchema size={14} />}
                     onClick={() => storeDispatch(toggleStudyBrowser())}
@@ -165,7 +213,7 @@ export function AppHeader({ studyNavigatorEnabled, dataCollectionEnabled }: { st
                 >
                   Contact
                 </Menu.Item>
-                {studyNavigatorEnabled && (
+                {developmentModeEnabled && (
                   <Menu.Item
                     leftSection={<IconUserPlus size={14} />}
                     onClick={() => getNewParticipant(storageEngine, studyHref)}
@@ -173,7 +221,7 @@ export function AppHeader({ studyNavigatorEnabled, dataCollectionEnabled }: { st
                     Next Participant
                   </Menu.Item>
                 )}
-                {studyNavigatorEnabled && (
+                {developmentModeEnabled && (
                   <Menu.Item
                     leftSection={<IconChartHistogram size={14} />}
                     component="a"

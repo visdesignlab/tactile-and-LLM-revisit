@@ -1,10 +1,18 @@
 import { expect, test } from '@playwright/test';
+import { checkSavedAnswers } from './checkSavedAnswers';
 
-test('html demo works as intended with previous button', async ({ page }) => {
+test('html demo works as intended with previous button', async ({ browser }) => {
+  const page = await browser.newPage();
+  await page.setViewportSize({
+    width: 1200,
+    height: 800,
+  });
+
   await page.goto('/');
 
   // Click on html-demo
   await page.getByLabel('Demo Studies').locator('div').filter({ hasText: 'HTML as a Stimulus' })
+    .nth(0)
     .getByText('Go to Study')
     .click();
 
@@ -37,7 +45,6 @@ test('html demo works as intended with previous button', async ({ page }) => {
 
   // Go to previous page
   await page.getByRole('button', { name: 'Previous', exact: true }).click();
-  await page.getByRole('button', { name: 'Previous', exact: true }).click();
 
   // Check answer is correctly saved
   await expect(input).toBeVisible();
@@ -53,7 +60,6 @@ test('html demo works as intended with previous button', async ({ page }) => {
 
   // Go to previous page
   await page.getByRole('button', { name: 'Previous', exact: true }).click();
-  await page.getByRole('button', { name: 'Previous', exact: true }).click();
 
   // Check answer is correctly saved
   await expect(input).toBeVisible();
@@ -63,9 +69,13 @@ test('html demo works as intended with previous button', async ({ page }) => {
   await expect(iframeContent).toBeVisible();
 
   await page.getByRole('button', { name: 'Next', exact: true }).click();
-  await page.getByRole('button', { name: 'Next', exact: true }).click();
 
   // Check that the end of study text renders
   const endText = await page.getByText('Please wait while your answers are uploaded.');
   await expect(endText).toBeVisible();
+
+  const uploaded = await page.getByText('Thank you for completing the study. You may close this window now.');
+  await expect(uploaded).toBeVisible();
+
+  await checkSavedAnswers(page, 'demo-html');
 });

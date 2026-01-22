@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ProvenanceGraph } from '@trrack/core/graph/graph-slice';
 import type {
-  Answer, ConfigResponseBlockLocation, ParticipantData, ResponseBlockLocation, SkipConditions, StringOption, StudyConfig, ValueOf,
+  Answer, ComponentBlock, ConfigResponseBlockLocation, InterruptionBlock, ParticipantData, ResponseBlockLocation, SkipConditions, StringOption, StudyConfig, ValueOf,
 } from '../parser/types';
 import { type REVISIT_MODE } from '../storage/engines/types';
 
@@ -70,7 +70,7 @@ Each item in the window event is given a time, a position an event name, and som
 export interface StoredAnswer {
   /** Object whose keys are the "id"s in the Response list of the component in the StudyConfig and whose value is the inputted value from the participant. */
   answer: Record<string, string | number | boolean | string[]>;
-
+  identifier: string;
   componentName: string;
   /** The order of the trial in the sequence. */
   trialOrder: string;
@@ -151,30 +151,37 @@ export interface StimulusParams<T, S = never> {
 export interface Sequence {
   id?: string;
   orderPath: string;
-  order: string;
+  order: ComponentBlock['order'] | 'dynamic';
   components: (string | Sequence)[];
-  skip?: SkipConditions;
+  skip: SkipConditions;
+  interruptions?: InterruptionBlock[];
 }
 
 export type FormElementProvenance = { form: StoredAnswer['answer'] };
 export interface StoreState {
   studyId: string;
   participantId: string;
-  isRecording: boolean;
   answers: ParticipantData['answers'];
   sequence: Sequence;
   config: StudyConfig;
   showStudyBrowser: boolean;
   showHelpText: boolean;
-  alertModal: { show: boolean, message: string };
+  alertModal: { show: boolean, message: string, title: string };
   trialValidation: TrialValidation;
   reactiveAnswers: Record<string, ValueOf<StoredAnswer['answer']>>;
   metadata: ParticipantMetadata;
   analysisProvState: Record<ConfigResponseBlockLocation, FormElementProvenance | undefined> & { stimulus: unknown | undefined };
   analysisIsPlaying: boolean;
   analysisHasAudio: boolean;
+  analysisHasScreenRecording: boolean;
+  analysisCanPlayScreenRecording: boolean;
+  provenanceJumpTime: number;
   analysisHasProvenance: boolean;
   modes: Record<REVISIT_MODE, boolean>;
   matrixAnswers: Record<string, Record<string, string>>;
+  rankingAnswers: Record<string, Record<string, string>>;
   funcSequence: Record<string, string[]>;
+  completed: boolean;
+  clickedPrevious: boolean;
+  storageEngineFailedToConnect: boolean;
 }

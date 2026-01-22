@@ -3,11 +3,11 @@ import * as d3 from 'd3';
 import {
   Center, Stack, Tooltip, Text,
 } from '@mantine/core';
-import { _ } from 'ajv';
 import { ParticipantData } from '../../../storage/types';
 import { SingleTaskLabelLines } from './SingleTaskLabelLines';
 import { SingleTask } from './SingleTask';
 import { StoredAnswer, StudyConfig } from '../../../parser/types';
+import { componentAnswersAreCorrect } from '../../../utils/correctAnswer';
 
 const LABEL_GAP = 25;
 const CHARACTER_SIZE = 8;
@@ -105,22 +105,8 @@ export function AllTasksTimeline({
 
       const component = studyConfig?.components[joinExceptLast];
 
-      let isCorrect = true;
-      let hasCorrect = false;
-
-      if (component && component.correctAnswer) {
-        component.correctAnswer.forEach((a) => {
-          const { id, answer: componentCorrectAnswer } = a;
-
-          if (!component || !component.correctAnswer || answer.answer[id] !== componentCorrectAnswer) {
-            isCorrect = false;
-          }
-        });
-
-        hasCorrect = true;
-      } else {
-        hasCorrect = false;
-      }
+      const isCorrect = componentAnswersAreCorrect(answer.answer, answer.correctAnswer);
+      const hasCorrect = !!((component && component.correctAnswer) || answer.correctAnswer.length > 0);
 
       return {
         line: <SingleTaskLabelLines key={name} labelHeight={currentHeight * LABEL_GAP} height={maxHeight} xScale={scale} scaleStart={scaleStart} />,
@@ -137,8 +123,13 @@ export function AllTasksTimeline({
                 {Object.entries(answer.answer).map((a) => {
                   const [id, componentAnswer] = a;
                   const correctAnswer = component?.correctAnswer?.find((c) => c.id === id)?.answer;
+                  const participantAnswer = (componentAnswer === undefined || componentAnswer === null || componentAnswer === '')
+                    ? 'N/A'
+                    : typeof componentAnswer === 'object'
+                      ? JSON.stringify(componentAnswer)
+                      : componentAnswer;
 
-                  return <Text key={id}>{`${id}: ${componentAnswer} ${correctAnswer ? `[${correctAnswer}]` : ''}`}</Text>;
+                  return <Text key={id}>{`${id}: ${participantAnswer} ${correctAnswer ? `[${typeof correctAnswer === 'object' ? JSON.stringify(correctAnswer) : correctAnswer}]` : ''}`}</Text>;
                 })}
               </Stack>
             )}

@@ -9,11 +9,11 @@ import { getSequenceFlatMapWithInterruptions } from '../utils/getSequenceFlatMap
 import { expandLibrarySequences, loadLibrariesParseNamespace, verifyLibraryUsage } from './libraryParser';
 import { isDynamicBlock, isInheritedComponent } from './utils';
 
-const ajv1 = new Ajv();
+const ajv1 = new Ajv({ allowUnionTypes: true });
 ajv1.addSchema(globalSchema);
 const globalValidate = ajv1.getSchema<GlobalConfig>('#/definitions/GlobalConfig')!;
 
-const ajv2 = new Ajv();
+const ajv2 = new Ajv({ allowUnionTypes: true });
 ajv2.addSchema(configSchema);
 const studyValidate = ajv2.getSchema<StudyConfig>('#/definitions/StudyConfig')!;
 
@@ -111,7 +111,7 @@ function verifyStudySkip(
   });
 
   // If this block has a skip, add the skip.to component to the skipTargets array
-  if (sequence.skip) {
+  if (sequence.skip && sequence.skip.length > 0) {
     skipTargets.push(...sequence.skip.map((skip) => skip.to).filter((target) => target !== 'end'));
   }
 }

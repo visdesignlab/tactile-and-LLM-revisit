@@ -1,6 +1,6 @@
 import localforage from 'localforage';
 import {
-  REVISIT_MODE, SequenceAssignment, SnapshotDocContent, StorageEngine, StorageObject, StorageObjectType,
+  REVISIT_MODE, SequenceAssignment, SnapshotDocContent, StorageEngine, StorageObject, StorageObjectType, cleanupModes,
 } from './types';
 
 export class LocalStorageEngine extends StorageEngine {
@@ -52,7 +52,7 @@ export class LocalStorageEngine extends StorageEngine {
     await this.studyDatabase.setItem(key, configHash);
   }
 
-  protected async _getAllSequenceAssignments(studyId: string) {
+  public async getAllSequenceAssignments(studyId: string) {
     const sequenceAssignmentPath = `${this.collectionPrefix}${studyId}/sequenceAssignment`;
     const sequenceAssignments = await this.studyDatabase.getItem<Record<string, SequenceAssignment>>(sequenceAssignmentPath);
     if (!sequenceAssignments) {
@@ -128,6 +128,18 @@ export class LocalStorageEngine extends StorageEngine {
     }
   }
 
+  protected async _undoRejectParticipantRealtime(participantId: string) {
+    await this.verifyStudyDatabase();
+    const sequenceAssignmentPath = `${this.collectionPrefix}${this.studyId}/sequenceAssignment`;
+    const sequenceAssignments = await this.studyDatabase.getItem<Record<string, SequenceAssignment>>(sequenceAssignmentPath) || {};
+
+    const participantSequenceAssignment = sequenceAssignments[participantId];
+    if (participantSequenceAssignment) {
+      participantSequenceAssignment.rejected = false;
+      await this.studyDatabase.setItem(sequenceAssignmentPath, sequenceAssignments);
+    }
+  }
+
   protected async _claimSequenceAssignment(participantId: string, sequenceAssignment: SequenceAssignment) {
     await this.verifyStudyDatabase();
     const sequenceAssignmentPath = `${this.collectionPrefix}${this.studyId}/sequenceAssignment`;
@@ -158,16 +170,17 @@ export class LocalStorageEngine extends StorageEngine {
     // Get the modes
     const modes = await this.studyDatabase.getItem(key) as Record<REVISIT_MODE, boolean> | null;
     if (modes) {
-      return modes;
+      const cleanedModes = cleanupModes(modes as Record<string, boolean>);
+      await this.studyDatabase.setItem(key, cleanedModes);
+      return cleanedModes;
     }
 
-    // Else, set and return defaults
     const defaults: Record<REVISIT_MODE, boolean> = {
       dataCollectionEnabled: true,
-      studyNavigatorEnabled: true,
-      analyticsInterfacePubliclyAccessible: true,
+      developmentModeEnabled: true,
+      dataSharingEnabled: true,
     };
-    this.studyDatabase.setItem(key, defaults);
+    await this.studyDatabase.setItem(key, defaults);
     return defaults;
   }
 
@@ -185,6 +198,11 @@ export class LocalStorageEngine extends StorageEngine {
     this.studyDatabase.setItem(key, modes);
   }
 
+  protected async _setModesDocument(studyId: string, modesDocument: Record<string, unknown>): Promise<void> {
+    const key = `${this.collectionPrefix}${studyId}/modes`;
+    await this.studyDatabase.setItem(key, modesDocument);
+  }
+
   protected async _getAudioUrl(task: string, participantId?: string) {
     await this.verifyStudyDatabase();
     if (this.studyId === undefined) {
@@ -195,6 +213,18 @@ export class LocalStorageEngine extends StorageEngine {
       throw new Error(`Audio for task ${task} and participant ${participantId || this.currentParticipantId} not found`);
     }
     return URL.createObjectURL(audioBlob);
+  }
+
+  protected async _getScreenRecordingUrl(task: string, participantId?: string) {
+    await this.verifyStudyDatabase();
+    if (this.studyId === undefined) {
+      throw new Error('Study ID is not set');
+    }
+    const screenRecordingBlob = await this._getFromStorage(`screenRecording/${participantId || this.currentParticipantId}`, task);
+    if (!screenRecordingBlob) {
+      throw new Error(`ScreenRecording for task ${task} and participant ${participantId || this.currentParticipantId} not found`);
+    }
+    return URL.createObjectURL(screenRecordingBlob);
   }
 
   protected async _testingReset(studyId: string) {
