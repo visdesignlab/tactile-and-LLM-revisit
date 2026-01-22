@@ -31,6 +31,7 @@
     },
     "prePrompt": {
       "type": "markdown",
+      "required": false,
       "path": "tactile-llm/assets/systemPrompt.md",
       "response": [
       {
@@ -46,6 +47,7 @@
     "learn": {
       "type": "react-component",
       "path": "tactile-llm/assets/LLMInterface.tsx",
+      "recordAudio": true,
       "response": [],
       "parameters": {
         "chartType": "violin-plot",
@@ -55,6 +57,7 @@
     "simpleAltText": {
       "type": "react-component",
       "path": "tactile-llm/assets/LLMInterfaceSimpleAltText.tsx",
+      "recordAudio": true,
       "response": [],
       "parameters": {
         "chartType": "violin-plot",
@@ -64,6 +67,7 @@
     "test": {
       "type": "react-component",
       "path": "tactile-llm/assets/LLMInterfaceTest.tsx",
+      "recordAudio": true,
       "response": [],
       "parameters": {
         "chartType": "violin-plot",
