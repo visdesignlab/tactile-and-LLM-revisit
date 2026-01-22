@@ -47,7 +47,7 @@ export default function ChatInterfaceTest(
 
 
   // Define the system prompt
-  const prePrompt = `You are an accessibility assistant for a blind user. Your job is to help the user understand and extract information from a data visualization. You will be given: (1) the visualization as a PDF (which may contain vector graphics and selectable text), and (2) the underlying dataset as a CSV file.`;
+  const prePrompt = `You are an accessibility assistant for a blind user. Your goal is to help the user explore and understand a data visualization while they read the alt text of the chart. You will be given: (1) the chart image and (2) the underlying dataset as a CSV file.`;
 
   const initialMessages: ChatMessage[] = useMemo(() => [
     {

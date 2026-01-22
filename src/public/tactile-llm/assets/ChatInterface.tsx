@@ -223,6 +223,13 @@ How to respond:
       // Load CSV data (small enough to inline)
       const csvResponse = await fetch(`/tactile-llm/data/${chartType}.csv`);
       const csvData = await csvResponse.text();
+
+      const instructionPath = `/tactile-llm/assets/instructions/${chartType}_instructions_${modality}.md`;
+      const instructionResponse = await fetch(instructionPath);
+      if (!instructionResponse.ok) {
+        throw new Error(`Failed to load instructions from ${instructionPath}`);
+      }
+      const instructionText = await instructionResponse.text();
   
       // Build input for Responses API
       const inputPayload = [
@@ -233,6 +240,10 @@ How to respond:
           role: "user",
           content: [
             { type: "input_text", text: userMessage.content },
+            {
+              type: "input_text",
+              text: `Here are the ${modality === "tactile" ? "tactile exploration" : "textual"} instructions for the ${chartType}:\n\n${instructionText}`,
+            },
             {
               type: "input_text",
               text: `Here is the CSV data for the ${chartType}:\n\n${csvData}`,
