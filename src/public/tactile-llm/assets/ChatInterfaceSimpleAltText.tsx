@@ -190,7 +190,7 @@ export default function ChatInterfaceSimpleAltText(
   
     try {
       // Load CSV data (small enough to inline)
-      const csvResponse = await fetch(`/tactile-llm/data/${chartType}.csv`);
+      const csvResponse = await fetch(`https://vdl.sci.utah.edu/tactile-and-LLM-revisit/tactile-llm/data/${chartType}.csv`);
       const csvData = await csvResponse.text();
   
       // Build input for Responses API

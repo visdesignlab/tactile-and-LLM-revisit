@@ -221,10 +221,12 @@ How to respond:
   
     try {
       // Load CSV data (small enough to inline)
-      const csvResponse = await fetch(`/tactile-llm/data/${chartType}.csv`);
+      const csvResponse = await fetch(`https://vdl.sci.utah.edu/tactile-and-LLM-revisit/tactile-llm/data/${chartType}.csv`);
+      // const csvResponse = await fetch(`/tactile-llm/data/${chartType}.csv`);
       const csvData = await csvResponse.text();
 
-      const instructionPath = `/tactile-llm/assets/instructions/${chartType}_instructions_${modality}.md`;
+      const instructionPath = `https://vdl.sci.utah.edu/tactile-and-LLM-revisit/tactile-llm/assets/instructions/${chartType}_instructions_${modality}.md`;
+      // const instructionPath = `/tactile-llm/assets/instructions/${chartType}_instructions_${modality}.md`;
       const instructionResponse = await fetch(instructionPath);
       if (!instructionResponse.ok) {
         throw new Error(`Failed to load instructions from ${instructionPath}`);
