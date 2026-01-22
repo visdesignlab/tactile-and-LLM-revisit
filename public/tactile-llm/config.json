@@ -31,7 +31,7 @@
     },
     "prePrompt": {
       "type": "markdown",
-      "required": false,
+
       "path": "tactile-llm/assets/systemPrompt.md",
       "response": [
       {
