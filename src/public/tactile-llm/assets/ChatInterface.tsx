@@ -21,6 +21,8 @@ import { Trrack } from '@trrack/core';
 import { ActionCreatorWithPayload } from '@reduxjs/toolkit';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { PREFIX } from '../../../utils/Prefix';
+import { useStudyId } from '../../../routes/utils';
 
 export default function ChatInterface(
   { modality, chartType, dataset, contentType, setAnswer, provenanceState, onClose, trrack, actions, updateProvenanceState, modalOpened, onMessagesUpdate }:
@@ -45,11 +47,11 @@ export default function ChatInterface(
     onMessagesUpdate?: (messages: ChatMessage[]) => void,
   },
 ) {
+  const studyId = useStudyId();
 
 
-// Define the system prompt
-const prePrompt = modality === 'tactile'
-  ? `
+  // Define the system prompts
+  const instructionsTactilePrompt = `
 You are an accessibility-focused AI tutor helping a blind user learn the **${chartType.replace('-', ' ')}** chart type using an example template chart. The main goal is understanding the chart type; use this example only to illustrate and practice.
 
 The user is blind and has a tactile version of this example chart. They will explore it by touch and ask questions.
@@ -63,8 +65,8 @@ How to respond:
 - Be concise, clear, and direct.
 - Refer to touch-perceivable structure (axes, groups, rows/columns, ordering, clusters, peaks/valleys). Avoid “look/see” language.
 - Use dataset.csv for exact values and comparisons. Do not invent labels or numbers. If something is missing, say so and ask one short follow-up question.
-`
-  : `
+`;
+  const instructionsTextPrompt = `
 You are an accessibility-focused AI tutor helping a blind user learn the **${chartType.replace('-', ' ')}** chart type using an example template chart. The main goal is understanding the chart type; use this example only to illustrate and practice.
 
 The user is blind and will learn from the textual explanation and ask questions.
@@ -79,6 +81,11 @@ How to respond:
 - Prefer non-visual descriptions (structure, values, trends). Avoid assuming the user can see color or small text.
 - Use dataset.csv for exact values and comparisons. Do not invent labels or numbers. If something is missing, say so and ask one short follow-up question.
 `;
+  const altTextPrompt = `You are an accessibility assistant for a blind user. Your goal is to help the user explore and understand a data visualization while they read the alt text of the chart. You will be given: (1) the chart image and (2) the underlying dataset as a CSV file.`;
+
+  const prePrompt = contentType === 'alt-text'
+    ? altTextPrompt
+    : (modality === 'tactile' ? instructionsTactilePrompt : instructionsTextPrompt);
 
 
   const initialMessages: ChatMessage[] = useMemo(() => [
@@ -226,17 +233,20 @@ How to respond:
   
     try {
       // Load CSV data (small enough to inline)
-      const csvResponse = await fetch(`https://vdl.sci.utah.edu/tactile-and-LLM-revisit/tactile-llm/data/${chartType}.csv`);
+      const csvResponse = await fetch(`${PREFIX}${studyId}/assets/data/${chartType}_${dataset}.csv`);
       // const csvResponse = await fetch(`/tactile-llm/data/${chartType}.csv`);
       const csvData = await csvResponse.text();
 
-      const instructionPath = `https://vdl.sci.utah.edu/tactile-and-LLM-revisit/tactile-llm/assets/instructions/${chartType}_instructions_${modality}.md`;
-      // const instructionPath = `/tactile-llm/assets/instructions/${chartType}_instructions_${modality}.md`;
-      const instructionResponse = await fetch(instructionPath);
-      if (!instructionResponse.ok) {
-        throw new Error(`Failed to load instructions from ${instructionPath}`);
+      let instructionText = '';
+      if (contentType === 'instructions') {
+        const instructionPath = `${PREFIX}${studyId}/assets/instructions/${chartType}_instructions_${modality}.md`;
+        // const instructionPath = `/tactile-llm/assets/instructions/${chartType}_instructions_${modality}.md`;
+        const instructionResponse = await fetch(instructionPath);
+        if (!instructionResponse.ok) {
+          throw new Error(`Failed to load instructions from ${instructionPath}`);
+        }
+        instructionText = await instructionResponse.text();
       }
-      const instructionText = await instructionResponse.text();
   
       // Build input for Responses API
       const inputPayload = [
@@ -247,10 +257,12 @@ How to respond:
           role: "user",
           content: [
             { type: "input_text", text: userMessage.content },
-            {
-              type: "input_text",
-              text: `Here are the ${modality === "tactile" ? "tactile exploration" : "textual"} instructions for the ${chartType}:\n\n${instructionText}`,
-            },
+            ...(contentType === 'instructions'
+              ? [{
+                type: "input_text",
+                text: `Here are the ${modality === "tactile" ? "tactile exploration" : "textual"} instructions for the ${chartType}:\n\n${instructionText}`,
+              }]
+              : []),
             {
               type: "input_text",
               text: `Here is the CSV data for the ${chartType}:\n\n${csvData}`,
@@ -259,8 +271,12 @@ How to respond:
               type: "input_image",
               file_id:
                 chartType === "violin-plot"
-                  ? "file-NnvHu4fUdz5oeqkTxJkRSz" // File ID for Violin Plot - Template Chart
-                  : "file-2jqhMr5MJe3bxfvXeaJYpd", // File ID for Clustered Heatmap - Template Chart
+                  ? dataset === "simple"
+                    ? "file-NnvHu4fUdz5oeqkTxJkRSz" // Violin Plot - Simple Dataset
+                    : "file-NiSf9xDPgv21d6dTzFxaqH" // Violin Plot - Complex Dataset
+                  : dataset === "simple"
+                    ? "file-2jqhMr5MJe3bxfvXeaJYpd" // Clustered Heatmap - Simple Dataset
+                    : "file-AXbDvppNy7Fy6NmwrcaE3p", // Clustered Heatmap - Complex Dataset
             },
           ],
         },
