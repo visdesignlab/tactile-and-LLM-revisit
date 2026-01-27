@@ -29,21 +29,6 @@
       "path": "tactile-llm/assets/introduction.md",
       "response": []
     },
-    "prePrompt": {
-      "type": "markdown",
-
-      "path": "tactile-llm/assets/systemPrompt.md",
-      "response": [
-      {
-          "id": "q-prePrompt",
-          "prompt": "Test Different System Prompts (This question is only for the Chart Learning Chatbot). It will be removed in the real study.",
-          "location": "belowStimulus",
-          "type": "longText",
-          "placeholder": "Please enter the system prompt for the LLM.",
-          "required": false
-      }
-    ]
-  },
     "learn": {
       "type": "react-component",
       "path": "tactile-llm/assets/LLMInterface.tsx",
@@ -79,7 +64,6 @@
     "order": "fixed",
     "components": [
       "introduction",
-      "prePrompt",
       "learn",
       "simpleAltText",
       "test"
