@@ -12,10 +12,11 @@ import { PREFIX } from '../../../utils/Prefix';
 import { useStudyId } from '../../../routes/utils';
 import { ReactMarkdownWrapper } from '../../../components/ReactMarkdownWrapper';
 
-export default function InstructionsDisplay({ chartType, modality, dataset,onOpenChat }: {
+export default function InstructionsDisplay({ chartType, modality, dataset, contentType, onOpenChat }: {
   chartType: 'violin-plot' | 'clustered-heatmap';
   modality: 'tactile' | 'text';
   dataset: 'simple' | 'complex';
+  contentType: 'instructions' | 'alt-text';
   onOpenChat?: () => void;
 }) {
   const studyId = useStudyId();
@@ -30,8 +31,15 @@ export default function InstructionsDisplay({ chartType, modality, dataset,onOpe
         setLoading(true);
 
         // Determine which instruction file to load
-        const instructionType = modality === 'tactile' ? 'tactile' : 'text';
-        const fileName = `${chartType}_instructions_${instructionType}.md`;
+        // const instructionType = modality === 'tactile' ? 'tactile' : 'text';
+        let fileName = "";
+        if (contentType === "instructions") {
+          fileName = `${chartType}_${contentType}_${modality}.md`;
+        } else if (contentType === "alt-text") {
+          fileName = `${chartType}_${contentType}_${dataset}.md`;
+        } else {
+          throw new Error(`Invalid content type: ${contentType}`);
+        }
 
         // In production, this would fetch from an API
         // For now, we'll simulate loading the content
@@ -44,35 +52,8 @@ export default function InstructionsDisplay({ chartType, modality, dataset,onOpe
         const content = await response.text();
         setInstructions(content);
       } catch (err) {
-        console.error('Error loading instructions:', err);
-        setError('Failed to load instructions. Please try refreshing the page.');
-
-        // Fallback to basic instructions
-        if (modality === 'tactile') {
-          setInstructions(`# ${chartType.replace('-', ' ').replace(/\b\w/g, (l) => l.toUpperCase())} - Tactile Instructions
-
-This is a tactile chart exploration session. You will be provided with tactile instructions to explore the chart.
-
-## What to expect:
-- Detailed tactile exploration steps
-- Chart orientation guidance
-- Data interpretation instructions
-- Interactive exploration techniques
-
-Please follow the tactile instructions carefully and ask the AI assistant any questions you have about the chart.`);
-        } else {
-          setInstructions(`# ${chartType.replace('-', ' ').replace(/\b\w/g, (l) => l.toUpperCase())} - Text Instructions
-
-This is a text-based learning session about ${chartType.replace('-', ' ')} charts.
-
-## What you'll learn:
-- Chart structure and components
-- Data representation methods
-- Interpretation techniques
-- Key concepts and terminology
-
-Read through the instructions and ask the AI assistant any questions you have about the chart.`);
-        }
+        console.error('Error loading texts:', err);
+        setError('Failed to load texts. Please try refreshing the page.');
       } finally {
         setLoading(false);
       }
@@ -86,7 +67,7 @@ Read through the instructions and ask the AI assistant any questions you have ab
       <Card shadow="md" radius="lg" p="lg" withBorder>
         <Flex align="center" justify="center" py="xl" gap="md">
           <Loader size={32} color="blue" />
-          <Text color="gray.6" size="md">Loading instructions...</Text>
+          <Text color="gray.6" size="md">Loading texts...</Text>
         </Flex>
       </Card>
     );
@@ -110,13 +91,14 @@ Read through the instructions and ask the AI assistant any questions you have ab
       <Flex direction="column" mb="md">
         <Flex justify="space-between" align="center">
           <div>
-            <Text size="xl" fw={700}>
-              {modality === 'tactile' ? 'Tactile Chart Instructions' : 'Chart Explanation'}
-            </Text>
             <Text size="sm" c="dimmed">
-              {modality === 'tactile'
-                ? 'Follow these tactile exploration instructions to learn about the chart. You can also ask the AI assistant any questions you have about the chart by pressing T or clicking the button.'
-                : 'Read this explanation to understand the chart type. You can also ask the AI assistant any questions you have about the chart by pressing T or clicking the button.'}
+              {contentType === 'instructions'
+                ? (modality === 'tactile'
+                  ? 'Follow these tactile exploration instructions to learn about the chart. You can also ask the AI assistant any questions you have about the chart by pressing T or clicking the button.'
+                  : 'Read this explanation to understand the chart type. You can also ask the AI assistant any questions you have about the chart by pressing T or clicking the button.')
+                : (dataset === 'simple'
+                  ? 'This is an example of alt text, which describes the chart used in the instruction you just heard.  You can also ask the AI assistant any questions you have about the chart by pressing T or clicking the button.'
+                  : 'This is an alt text of a new dataset of the same chart type you just learned.  You can also ask the AI assistant any questions you have about the chart by pressing T or clicking the button.')}
             </Text>
           </div>
           {onOpenChat && (
