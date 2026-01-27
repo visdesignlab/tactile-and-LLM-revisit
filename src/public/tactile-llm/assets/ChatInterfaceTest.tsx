@@ -23,13 +23,12 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 export default function ChatInterfaceTest(
-  { modality, chartType, setAnswer, provenanceState, testSystemPrompt, onClose, trrack, actions, updateProvenanceState, modalOpened, onMessagesUpdate }:
+  { modality, chartType, setAnswer, provenanceState, onClose, trrack, actions, updateProvenanceState, modalOpened, onMessagesUpdate }:
   {
     modality: 'tactile' | 'text',
     chartType: 'violin-plot' | 'clustered-heatmap',
     setAnswer: StimulusParams<never>['setAnswer'],
     provenanceState?: ChatProvenanceState,
-    testSystemPrompt?: string,
     onClose?: () => void,
     trrack: Trrack<{
         messages: never[];

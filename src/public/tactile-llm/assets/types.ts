@@ -16,5 +16,4 @@ type ChartModality = 'tactile' | 'text';
 export interface ChatInterfaceParams {
   chartType: ChartType;
   modality: ChartModality;
-  testSystemPrompt?: string;
 }

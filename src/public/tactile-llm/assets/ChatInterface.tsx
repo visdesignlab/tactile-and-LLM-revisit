@@ -23,13 +23,12 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 export default function ChatInterface(
-  { modality, chartType, setAnswer, provenanceState, testSystemPrompt, onClose, trrack, actions, updateProvenanceState, modalOpened, onMessagesUpdate }:
+  { modality, chartType, setAnswer, provenanceState, onClose, trrack, actions, updateProvenanceState, modalOpened, onMessagesUpdate }:
   {
     modality: 'tactile' | 'text',
     chartType: 'violin-plot' | 'clustered-heatmap',
     setAnswer: StimulusParams<never>['setAnswer'],
     provenanceState?: ChatProvenanceState,
-    testSystemPrompt?: string,
     onClose?: () => void,
     trrack: Trrack<{
         messages: never[];
@@ -83,11 +82,11 @@ How to respond:
   const initialMessages: ChatMessage[] = useMemo(() => [
     {
       role: 'system',
-      content: testSystemPrompt || `${prePrompt}`,
+      content: `${prePrompt}`,
       timestamp: new Date().getTime(),
       display: false,
     },
-  ], [chartType, prePrompt, testSystemPrompt]);
+  ], [chartType, prePrompt]);
 
   // Local React states for chat history
   const [messages, setMessages] = useState<ChatMessage[]>([...initialMessages]);

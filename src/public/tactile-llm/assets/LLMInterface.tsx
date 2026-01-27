@@ -7,7 +7,6 @@ import { ChatInterfaceParams, ChatMessage, ChatProvenanceState } from './types';
 import { Registry, initializeTrrack } from '@trrack/core';
 
 export default function LLMInterface({ parameters, setAnswer, answers, provenanceState }: StimulusParams<ChatInterfaceParams, ChatProvenanceState>) {
-  console.log('LLMInterface answers:', answers.prePrompt_1.answer["q-prePrompt"]);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [fullMessages, setFullMessages] = useState<ChatMessage[]>([]);
@@ -116,7 +115,6 @@ export default function LLMInterface({ parameters, setAnswer, answers, provenanc
           chartType={parameters.chartType} 
           setAnswer={setAnswer} 
           provenanceState={provenanceState} 
-          testSystemPrompt={answers.prePrompt_1.answer["q-prePrompt"] as string}
           onClose={() => setModal(false)}
           trrack={trrack}
           actions={actions as any}
