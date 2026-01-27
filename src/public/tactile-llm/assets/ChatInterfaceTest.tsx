@@ -213,12 +213,12 @@ export default function ChatInterfaceTest(
                   ? "file-NiSf9xDPgv21d6dTzFxaqH" // File ID for Violin Plot - Complex Chart
                   : "file-AXbDvppNy7Fy6NmwrcaE3p", // File ID for Clustered Heatmap - Complex Chart
             },
-            {
-              type: "input_file",
-              file_id: chartType === "violin-plot"
-                ? "file-FU7Y3j8xkBy7hK3C8Hecru"
-                : "file-UVyfi6BmPK5m7KTmZPhqdd",
-            }
+            // {
+            //   type: "input_file",
+            //   file_id: chartType === "violin-plot"
+            //     ? "file-FU7Y3j8xkBy7hK3C8Hecru"
+            //     : "file-UVyfi6BmPK5m7KTmZPhqdd",
+            // }
           ],
         },
       ];
