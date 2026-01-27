@@ -236,6 +236,7 @@ How to respond:
       const csvResponse = await fetch(`${PREFIX}${studyId}/assets/data/${chartType}_${dataset}.csv`);
       // const csvResponse = await fetch(`/tactile-llm/data/${chartType}.csv`);
       const csvData = await csvResponse.text();
+      console.log("CSV DATA:", csvData);
 
       let instructionText = '';
       if (contentType === 'instructions') {
