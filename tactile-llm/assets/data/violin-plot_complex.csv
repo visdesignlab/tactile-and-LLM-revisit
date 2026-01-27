@@ -1,0 +1,196 @@
+country,Human Development Index (value),region
+Afghanistan,0.478,Asia
+Angola,0.586,Africa
+Albania,0.796,Europe
+Andorra,0.858,Europe
+United Arab Emirates,0.911,Asia
+Argentina,0.842,Americas
+Armenia,0.759,Asia
+Antigua and Barbuda,0.788,Americas
+Australia,0.951,Oceania
+Austria,0.916,Europe
+Azerbaijan,0.745,Asia
+Burundi,0.426,Africa
+Belgium,0.937,Europe
+Benin,0.525,Africa
+Burkina Faso,0.449,Africa
+Bangladesh,0.661,Asia
+Bulgaria,0.795,Europe
+Bahrain,0.875,Asia
+Bahamas,0.812,Americas
+Bosnia and Herzegovina,0.78,Europe
+Belarus,0.808,Europe
+Belize,0.683,Americas
+Bolivia (Plurinational State of),0.692,Americas
+Brazil,0.754,Americas
+Barbados,0.79,Americas
+Brunei Darussalam,0.829,Asia
+Bhutan,0.666,Asia
+Botswana,0.693,Africa
+Central African Republic,0.404,Africa
+Canada,0.936,Americas
+Switzerland,0.962,Europe
+Chile,0.855,Americas
+China,0.768,Asia
+Côte d'Ivoire,0.55,Africa
+Cameroon,0.576,Africa
+Congo (Democratic Republic of the),0.479,Africa
+Congo,0.571,Africa
+Colombia,0.752,Americas
+Comoros,0.558,Africa
+Cabo Verde,0.662,Africa
+Costa Rica,0.809,Americas
+Cuba,0.764,Americas
+Cyprus,0.896,Asia
+Czechia,0.889,Europe
+Germany,0.942,Europe
+Djibouti,0.509,Africa
+Dominica,0.72,Americas
+Denmark,0.948,Europe
+Dominican Republic,0.767,Americas
+Algeria,0.745,Africa
+Ecuador,0.74,Americas
+Egypt,0.731,Africa
+Eritrea,0.492,Africa
+Spain,0.905,Europe
+Estonia,0.89,Europe
+Ethiopia,0.498,Africa
+Finland,0.94,Europe
+Fiji,0.73,Oceania
+France,0.903,Europe
+Micronesia (Federated States of),0.628,Oceania
+Gabon,0.706,Africa
+United Kingdom,0.929,Europe
+Georgia,0.802,Asia
+Ghana,0.632,Africa
+Guinea,0.465,Africa
+Gambia,0.5,Africa
+Guinea-Bissau,0.483,Africa
+Equatorial Guinea,0.596,Africa
+Greece,0.887,Europe
+Grenada,0.795,Americas
+Guatemala,0.627,Americas
+Guyana,0.714,Americas
+"Hong Kong, China (SAR)",0.952,Asia
+Honduras,0.621,Americas
+Croatia,0.858,Europe
+Haiti,0.535,Americas
+Hungary,0.846,Europe
+Indonesia,0.705,Asia
+India,0.633,Asia
+Ireland,0.945,Europe
+Iran (Islamic Republic of),0.774,Asia
+Iraq,0.686,Asia
+Iceland,0.959,Europe
+Israel,0.919,Asia
+Italy,0.895,Europe
+Jamaica,0.709,Americas
+Jordan,0.72,Asia
+Japan,0.925,Asia
+Kazakhstan,0.811,Asia
+Kenya,0.575,Africa
+Kyrgyzstan,0.692,Asia
+Cambodia,0.593,Asia
+Kiribati,0.624,Oceania
+Saint Kitts and Nevis,0.777,Americas
+Korea (Republic of),0.925,Asia
+Kuwait,0.831,Asia
+Lao People's Democratic Republic,0.607,Asia
+Lebanon,0.706,Asia
+Liberia,0.481,Africa
+Libya,0.718,Africa
+Saint Lucia,0.715,Americas
+Liechtenstein,0.935,Europe
+Sri Lanka,0.782,Asia
+Lesotho,0.514,Africa
+Lithuania,0.875,Europe
+Luxembourg,0.93,Europe
+Latvia,0.863,Europe
+Morocco,0.683,Africa
+Monaco,,Europe
+Moldova (Republic of),0.767,Europe
+Madagascar,0.501,Africa
+Maldives,0.747,Asia
+Mexico,0.758,Americas
+Marshall Islands,0.639,Oceania
+North Macedonia,0.77,Europe
+Mali,0.428,Africa
+Malta,0.918,Europe
+Myanmar,0.585,Asia
+Montenegro,0.832,Europe
+Mongolia,0.739,Asia
+Mozambique,0.446,Africa
+Mauritania,0.556,Africa
+Mauritius,0.802,Africa
+Malawi,0.512,Africa
+Malaysia,0.803,Asia
+Namibia,0.615,Africa
+Niger,0.4,Africa
+Nigeria,0.535,Africa
+Nicaragua,0.667,Americas
+Netherlands,0.941,Europe
+Norway,0.961,Europe
+Nepal,0.602,Asia
+Nauru,,Oceania
+New Zealand,0.937,Oceania
+Oman,0.816,Asia
+Pakistan,0.544,Asia
+Panama,0.805,Americas
+Peru,0.762,Americas
+Philippines,0.699,Asia
+Palau,0.767,Oceania
+Papua New Guinea,0.558,Oceania
+Poland,0.876,Europe
+Korea (Democratic People's Rep. of),,Asia
+Portugal,0.866,Europe
+Paraguay,0.717,Americas
+"Palestine, State of",0.715,Asia
+Qatar,0.855,Asia
+Romania,0.821,Europe
+Russian Federation,0.822,Europe
+Rwanda,0.534,Africa
+Saudi Arabia,0.875,Asia
+Sudan,0.508,Africa
+Senegal,0.511,Africa
+Singapore,0.939,Asia
+Solomon Islands,0.564,Oceania
+Sierra Leone,0.477,Africa
+El Salvador,0.675,Americas
+San Marino,0.853,Europe
+Somalia,,Africa
+Serbia,0.802,Europe
+South Sudan,0.385,Africa
+Sao Tome and Principe,0.618,Africa
+Suriname,0.73,Americas
+Slovakia,0.848,Europe
+Slovenia,0.918,Europe
+Sweden,0.947,Europe
+Eswatini (Kingdom of),0.597,Africa
+Seychelles,0.785,Africa
+Syrian Arab Republic,0.577,Asia
+Chad,0.394,Africa
+Togo,0.539,Africa
+Thailand,0.8,Asia
+Tajikistan,0.685,Asia
+Turkmenistan,0.745,Asia
+Timor-Leste,0.607,Asia
+Tonga,0.745,Oceania
+Trinidad and Tobago,0.81,Americas
+Tunisia,0.731,Africa
+Turkey,0.838,Asia
+Tuvalu,0.641,Oceania
+Tanzania (United Republic of),0.549,Africa
+Uganda,0.525,Africa
+Ukraine,0.773,Europe
+Uruguay,0.809,Americas
+United States,0.921,Americas
+Uzbekistan,0.727,Asia
+Saint Vincent and the Grenadines,0.751,Americas
+Venezuela (Bolivarian Republic of),0.691,Americas
+Viet Nam,0.703,Asia
+Vanuatu,0.607,Oceania
+Samoa,0.707,Oceania
+Yemen,0.455,Asia
+South Africa,0.713,Africa
+Zambia,0.565,Africa
+Zimbabwe,0.593,Africa
