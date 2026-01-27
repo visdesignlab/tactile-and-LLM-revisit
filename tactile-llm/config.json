@@ -29,7 +29,7 @@
       "path": "tactile-llm/assets/introduction.md",
       "response": []
     },
-    "learn": {
+    "learn1": {
       "type": "react-component",
       "path": "tactile-llm/assets/LLMInterface.tsx",
       "recordAudio": true,
@@ -41,7 +41,7 @@
         "contentType": "instructions"
       }
     },
-    "simpleAltText": {
+    "simpleAltText1": {
       "type": "react-component",
       "path": "tactile-llm/assets/LLMInterface.tsx",
       "recordAudio": true,
@@ -53,7 +53,7 @@
         "contentType": "alt-text"
       }
     },
-    "test": {
+    "test1": {
       "type": "react-component",
       "path": "tactile-llm/assets/LLMInterface.tsx",
       "recordAudio": true,
@@ -64,15 +64,54 @@
         "dataset": "complex",
         "contentType": "alt-text"
       }
+    },
+    "learn2": {
+      "type": "react-component",
+      "path": "tactile-llm/assets/LLMInterface.tsx",
+      "recordAudio": true,
+      "response": [],
+      "parameters": {
+        "chartType": "clustered-heatmap",
+        "modality": "text",
+        "dataset": "simple",
+        "contentType": "instructions"
+      }
+    },
+    "simpleAltText2": {
+      "type": "react-component",
+      "path": "tactile-llm/assets/LLMInterface.tsx",
+      "recordAudio": true,
+      "response": [],
+      "parameters": {
+        "chartType": "clustered-heatmap",
+        "modality": "text",
+        "dataset": "simple",
+        "contentType": "alt-text"
+      }
+    },
+    "test2": {
+      "type": "react-component",
+      "path": "tactile-llm/assets/LLMInterface.tsx",
+      "recordAudio": true,
+      "response": [],
+      "parameters": {
+        "chartType": "clustered-heatmap",
+        "modality": "text",
+        "dataset": "complex",
+        "contentType": "alt-text"
+      }
     }
   },
   "sequence": {
     "order": "fixed",
     "components": [
       "introduction",
-      "learn",
-      "simpleAltText",
-      "test"
+      "learn1",
+      "simpleAltText1",
+      "test1",
+      "learn2",
+      "simpleAltText2",
+      "test2"
     ]
   }
 }
