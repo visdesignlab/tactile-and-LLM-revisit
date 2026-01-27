@@ -195,10 +195,14 @@ How to respond:
     }
   }, [messages]);
 
-  // Focus input on mount
+  // Focus input when the modal opens (screen-reader friendly)
   useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+    if (!modalOpened) return;
+    const focusTimer = window.setTimeout(() => {
+      inputRef.current?.focus();
+    }, 0);
+    return () => window.clearTimeout(focusTimer);
+  }, [modalOpened]);
 
 
   // handleSubmit(): Triggered when the user presses Enter or clicks Send.
@@ -481,6 +485,8 @@ How to respond:
       <form onSubmit={handleSubmit} style={{ display: 'flex', gap: rem(8) }}>
         <Textarea
           ref={inputRef}
+          autoFocus
+          data-autofocus
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyPress={handleKeyPress}
