@@ -12,9 +12,10 @@ import { PREFIX } from '../../../utils/Prefix';
 import { useStudyId } from '../../../routes/utils';
 import { ReactMarkdownWrapper } from '../../../components/ReactMarkdownWrapper';
 
-export default function InstructionsDisplay({ chartType, modality, onOpenChat }: {
+export default function InstructionsDisplay({ chartType, modality, dataset,onOpenChat }: {
   chartType: 'violin-plot' | 'clustered-heatmap';
   modality: 'tactile' | 'text';
+  dataset: 'simple' | 'complex';
   onOpenChat?: () => void;
 }) {
   const studyId = useStudyId();

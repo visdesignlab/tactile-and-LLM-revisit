@@ -23,10 +23,12 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 export default function ChatInterface(
-  { modality, chartType, setAnswer, provenanceState, onClose, trrack, actions, updateProvenanceState, modalOpened, onMessagesUpdate }:
+  { modality, chartType, dataset, contentType, setAnswer, provenanceState, onClose, trrack, actions, updateProvenanceState, modalOpened, onMessagesUpdate }:
   {
     modality: 'tactile' | 'text',
     chartType: 'violin-plot' | 'clustered-heatmap',
+    dataset: 'simple' | 'complex',
+    contentType: 'instructions' | 'alt-text',
     setAnswer: StimulusParams<never>['setAnswer'],
     provenanceState?: ChatProvenanceState,
     onClose?: () => void,

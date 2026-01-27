@@ -95,6 +95,8 @@ export default function LLMInterface({ parameters, setAnswer, answers, provenanc
         <InstructionsDisplay 
           modality={parameters.modality} 
           chartType={parameters.chartType}
+          dataset={parameters.dataset}
+          contentType={parameters.contentType}
           onOpenChat={() => setModal(true)}
         />
       </Card>
@@ -113,6 +115,8 @@ export default function LLMInterface({ parameters, setAnswer, answers, provenanc
         <ChatInterface 
           modality={parameters.modality}
           chartType={parameters.chartType} 
+          dataset={parameters.dataset}
+          contentType={parameters.contentType}
           setAnswer={setAnswer} 
           provenanceState={provenanceState} 
           onClose={() => setModal(false)}

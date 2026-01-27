@@ -12,8 +12,12 @@ export interface ChatProvenanceState {
 
 type ChartType = 'violin-plot' | 'clustered-heatmap';
 type ChartModality = 'tactile' | 'text';
+type Dataset = 'simple' | 'complex';
+type ContentType = 'instructions' | 'alt-text';
 
 export interface ChatInterfaceParams {
   chartType: ChartType;
   modality: ChartModality;
+  dataset: Dataset;
+  contentType: ContentType;
 }
