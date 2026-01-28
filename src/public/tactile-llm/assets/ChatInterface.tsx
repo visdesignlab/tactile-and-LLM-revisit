@@ -72,6 +72,16 @@ You are given:
 (2) The underlying dataset as dataset.csv for the same example.
 (3) The instructions for exploring the tactile chart.
 
+Gating policy:
+- Default: respond normally and do not mention chart/data/instructions.
+- Only use background when the user explicitly asks about the chart, dataset/CSV, or instructions, or when the question clearly depends on them.
+- If unclear, ask one short clarifying question.
+
+Examples:
+- User: "hello" → Assistant: "Hi! How can I help you today?"
+- User: "thanks" → Assistant: "You're welcome! Anything else?"
+- User: "What are the axes on this chart?" → Use background to answer.
+
 How to respond:
 - Be concise, clear, and direct.
 - Refer to touch-perceivable structure (axes, groups, rows/columns, ordering, clusters, peaks/valleys). Avoid “look/see” language.
@@ -87,12 +97,33 @@ You are given:
 (2) The underlying dataset as dataset.csv for the same example.
 (3) The textual explanation of the chart.
 
+Gating policy:
+- Default: respond normally and do not mention chart/data/instructions.
+- Only use background when the user explicitly asks about the chart, dataset/CSV, or instructions, or when the question clearly depends on them.
+- If unclear, ask one short clarifying question.
+
+Examples:
+- User: "hello" → Assistant: "Hi! How can I help you today?"
+- User: "thanks" → Assistant: "You're welcome! Anything else?"
+- User: "Which category has the highest value?" → Use background to answer.
+
 How to respond:
 - Be concise, clear, and direct.
 - Prefer non-visual descriptions (structure, values, trends). Avoid assuming the user can see color or small text.
 - Use dataset.csv for exact values and comparisons. Do not invent labels or numbers. If something is missing, say so and ask one short follow-up question.
 `;
-  const altTextPrompt = `You are an accessibility assistant for a blind user. Your goal is to help the user explore and understand a data visualization while they read the alt text of the chart. You will be given: (1) the chart image and (2) the underlying dataset as a CSV file.`;
+  const altTextPrompt = `
+You are an accessibility assistant for a blind user. Your goal is to help the user explore and understand a data visualization while they read the alt text of the chart. You will be given: (1) the chart image and (2) the underlying dataset as a CSV file.
+
+Gating policy:
+- Default: respond normally and do not mention chart/data/instructions.
+- Only use background when the user explicitly asks about the chart, dataset/CSV, or instructions, or when the question clearly depends on them.
+- If unclear, ask one short clarifying question.
+
+Examples:
+- User: "hello" → Assistant: "Hi! How can I help you today?"
+- User: "Explain the chart axes." → Use background to answer.
+`;
 
   const prePrompt = contentType === 'alt-text'
     ? altTextPrompt
@@ -138,13 +169,17 @@ How to respond:
 
     // ---------- Compact session memory ----------
 
+    const getVisibleMessages = (msgList: ChatMessage[]) => msgList.filter((m) => m.display);
+
     async function summarizeHistory(oldMessages: ChatMessage[]) {
+      const visibleMessages = getVisibleMessages(oldMessages);
+      if (visibleMessages.length === 0) return;
       const summaryPrompt = `
       Summarize the following conversation between the user and assistant.
       Capture important facts, conclusions, and tone, but omit greetings or filler.
     
       Conversation:
-      ${oldMessages.map(m => `${m.role}: ${m.content}`).join("\n")}
+      ${visibleMessages.map(m => `${m.role}: ${m.content}`).join("\n")}
       `;
     
       const resp = await fetch(`${import.meta.env.VITE_OPENAI_API_URL}/v1/responses`, {
@@ -164,7 +199,7 @@ How to respond:
     }
 
     const getCompactContext = (msgList: ChatMessage[]) => {
-      const recent = msgList.slice(-5);
+      const recent = getVisibleMessages(msgList).slice(-5);
       const context = [];
     
       context.push({
@@ -195,6 +230,98 @@ How to respond:
       });
     
       return context;
+    };
+
+    const backgroundKeywords = [
+      "chart",
+      "plot",
+      "heatmap",
+      "violin",
+      "dataset",
+      "csv",
+      "value",
+      "axis",
+      "row",
+      "column",
+      "cluster",
+    ];
+
+    const hasBackgroundKeyword = (text: string) => {
+      const normalized = text.toLowerCase();
+      return backgroundKeywords.some((keyword) => normalized.includes(keyword));
+    };
+
+    const shouldUseBackground = async (userText: string) => {
+      if (hasBackgroundKeyword(userText)) return true;
+
+      const routerPrompt = `
+You are a router. Decide if the user's message explicitly asks about the chart, dataset/CSV, or instructions.
+Return exactly one token: USE_BACKGROUND or NO_BACKGROUND.
+`;
+
+      try {
+        const resp = await fetch(`${import.meta.env.VITE_OPENAI_API_URL}/v1/responses`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "gpt-4o-mini",
+            input: [
+              { role: "system", content: [{ type: "input_text", text: routerPrompt }] },
+              { role: "user", content: [{ type: "input_text", text: userText }] },
+            ],
+            max_output_tokens: 8,
+            temperature: 0,
+          }),
+        });
+
+        const data = await resp.json();
+        const text = (data.output?.[0]?.content?.[0]?.text || "").trim().toUpperCase();
+        return text.includes("USE_BACKGROUND");
+      } catch (err) {
+        console.warn("Router failed, defaulting to NO_BACKGROUND", err);
+        return false;
+      }
+    };
+
+    const buildBackgroundMessages = (
+      csvData: string,
+      instructionText: string,
+    ) => {
+      // System messages only accept input_text, so attach the image as a hidden user message.
+      const backgroundTextMessage = {
+        role: "system",
+        content: [
+          {
+            type: "input_text",
+            text: [
+              "BACKGROUND (reference only — do not mention unless user asks about chart/data/instructions).",
+              instructionText
+                ? `Instructions (${modality === "tactile" ? "tactile exploration" : "textual"}):\n${instructionText}`
+                : "",
+              `Dataset (CSV):\n${csvData}`,
+            ].filter(Boolean).join("\n\n"),
+          },
+        ],
+      };
+
+      const backgroundImageMessage = {
+        role: "user",
+        content: [
+          {
+            type: "input_image",
+            file_id:
+              chartType === "violin-plot"
+                ? dataset === "simple"
+                  ? "file-NnvHu4fUdz5oeqkTxJkRSz" // Violin Plot - Simple Dataset
+                  : "file-NiSf9xDPgv21d6dTzFxaqH" // Violin Plot - Complex Dataset
+                : dataset === "simple"
+                  ? "file-2jqhMr5MJe3bxfvXeaJYpd" // Clustered Heatmap - Simple Dataset
+                  : "file-AXbDvppNy7Fy6NmwrcaE3p", // Clustered Heatmap - Complex Dataset
+          },
+        ],
+      };
+
+      return [backgroundTextMessage, backgroundImageMessage];
     };
     
 
@@ -243,55 +370,39 @@ How to respond:
     setError(null);
   
     try {
-      // Load CSV data (small enough to inline)
-      const csvResponse = await fetch(`${PREFIX}${studyId}/assets/data/${chartType}_${dataset}.csv`);
-      // const csvResponse = await fetch(`/tactile-llm/data/${chartType}.csv`);
-      const csvData = await csvResponse.text();
-      console.log("CSV DATA:", csvData);
+      const useBackground = await shouldUseBackground(userMessage.content);
 
-      let instructionText = '';
-      if (contentType === 'instructions') {
-        const instructionPath = `${PREFIX}${studyId}/assets/instructions/${chartType}_instructions_${modality}.md`;
-        // const instructionPath = `/tactile-llm/assets/instructions/${chartType}_instructions_${modality}.md`;
-        const instructionResponse = await fetch(instructionPath);
-        if (!instructionResponse.ok) {
-          throw new Error(`Failed to load instructions from ${instructionPath}`);
+      let csvData = "";
+      let instructionText = "";
+
+      if (useBackground) {
+        // Fetch background only when needed to save tokens and prevent irrelevant replies.
+        const csvResponse = await fetch(`${PREFIX}${studyId}/assets/data/${chartType}_${dataset}.csv`);
+        const csvText = await csvResponse.text();
+        csvData = csvText;
+
+        if (contentType === 'instructions') {
+          const instructionPath = `${PREFIX}${studyId}/assets/instructions/${chartType}_instructions_${modality}.md`;
+          const instructionResponse = await fetch(instructionPath);
+          if (!instructionResponse.ok) {
+            throw new Error(`Failed to load instructions from ${instructionPath}`);
+          }
+          instructionText = await instructionResponse.text();
         }
-        instructionText = await instructionResponse.text();
       }
   
       // Build input for Responses API
       const inputPayload = [
         // Context
         ...getCompactContext(messages),
-        // Current user turn (with CSV + image)
+        // Current user turn (user text only)
         {
           role: "user",
           content: [
             { type: "input_text", text: userMessage.content },
-            ...(contentType === 'instructions'
-              ? [{
-                type: "input_text",
-                text: `Here are the ${modality === "tactile" ? "tactile exploration" : "textual"} instructions for the ${chartType}:\n\n${instructionText}`,
-              }]
-              : []),
-            {
-              type: "input_text",
-              text: `Here is the CSV data for the ${chartType}:\n\n${csvData}`,
-            },
-            {
-              type: "input_image",
-              file_id:
-                chartType === "violin-plot"
-                  ? dataset === "simple"
-                    ? "file-NnvHu4fUdz5oeqkTxJkRSz" // Violin Plot - Simple Dataset
-                    : "file-NiSf9xDPgv21d6dTzFxaqH" // Violin Plot - Complex Dataset
-                  : dataset === "simple"
-                    ? "file-2jqhMr5MJe3bxfvXeaJYpd" // Clustered Heatmap - Simple Dataset
-                    : "file-AXbDvppNy7Fy6NmwrcaE3p", // Clustered Heatmap - Complex Dataset
-            },
           ],
         },
+        ...(useBackground ? buildBackgroundMessages(csvData, instructionText) : []),
       ];
   
       const response = await fetch(
