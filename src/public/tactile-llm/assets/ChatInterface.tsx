@@ -48,6 +48,17 @@ export default function ChatInterface(
   },
 ) {
   const studyId = useStudyId();
+  const srOnlyStyles = {
+    position: 'absolute',
+    width: 1,
+    height: 1,
+    padding: 0,
+    margin: -1,
+    overflow: 'hidden',
+    clip: 'rect(0, 0, 0, 0)',
+    whiteSpace: 'nowrap',
+    border: 0,
+  } as const;
 
 
   // Define the system prompts
@@ -442,6 +453,15 @@ How to respond:
                     color: message.role === 'user' ? '#fff' : '#212529',
                   }}
                 >
+                  {message.role === 'user' ? (
+                    <Text component="h5" className="sr-only" style={srOnlyStyles}>
+                      You said:
+                    </Text>
+                  ) : (
+                    <Text component="h6" className="sr-only" style={srOnlyStyles}>
+                      Assistant said:
+                    </Text>
+                  )}
                 {message.role === 'assistant' ? (
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
