@@ -141,7 +141,8 @@ Examples:
 
   // Local React states for chat history
   const [messages, setMessages] = useState<ChatMessage[]>([...initialMessages]);
-  const [shortSummary, setShortSummary] = useState<string>(""); // short summary of the old conversation
+  const messagesRef = useRef<ChatMessage[]>([...initialMessages]);
+  const [previousResponseId, setPreviousResponseId] = useState<string | null>(null);
 
   // Load existing provenance state
   useEffect(() => {
@@ -150,6 +151,7 @@ Examples:
     } else {
       setMessages([...initialMessages]);
     }
+    setPreviousResponseId(null);
   }, [provenanceState, initialMessages]);
 
   // Update parent component when messages change
@@ -157,6 +159,7 @@ Examples:
     if (onMessagesUpdate) {
       onMessagesUpdate(messages);
     }
+    messagesRef.current = messages;
   }, [messages, onMessagesUpdate]);
 
   const [inputValue, setInputValue] = useState('');
@@ -167,70 +170,7 @@ Examples:
 
 
 
-    // ---------- Compact session memory ----------
-
-    const getVisibleMessages = (msgList: ChatMessage[]) => msgList.filter((m) => m.display);
-
-    async function summarizeHistory(oldMessages: ChatMessage[]) {
-      const visibleMessages = getVisibleMessages(oldMessages);
-      if (visibleMessages.length === 0) return;
-      const summaryPrompt = `
-      Summarize the following conversation between the user and assistant.
-      Capture important facts, conclusions, and tone, but omit greetings or filler.
-    
-      Conversation:
-      ${visibleMessages.map(m => `${m.role}: ${m.content}`).join("\n")}
-      `;
-    
-      const resp = await fetch(`${import.meta.env.VITE_OPENAI_API_URL}/v1/responses`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "gpt-4o-mini",
-          input: [{ role: "system", content: [{ type: "input_text", text: summaryPrompt }] }],
-          max_output_tokens: 250,
-          temperature: 0.3,
-        }),
-      });
-    
-      const data = await resp.json();
-      const text = data.output?.[0]?.content?.[0]?.text || "";
-      setShortSummary(prev => prev ? `${prev}\n${text}` : text);
-    }
-
-    const getCompactContext = (msgList: ChatMessage[]) => {
-      const recent = getVisibleMessages(msgList).slice(-5);
-      const context = [];
-    
-      context.push({
-        role: "system",
-        content: [{ type: "input_text", text: initialMessages[0].content }],
-      });
-    
-      if (shortSummary) {
-        context.push({
-          role: "system",
-          content: [{ type: "input_text", text: `Summary of earlier conversation:\n${shortSummary}` }],
-        });
-        console.log("shortSummary:", shortSummary);
-      }
-    
-      recent.forEach((m) => {
-        if (m.role === "assistant") {
-          context.push({
-            role: "assistant",
-            content: [{ type: "output_text", text: m.content }],
-          });
-        } else {
-          context.push({
-            role: m.role,
-            content: [{ type: "input_text", text: m.content }],
-          });
-        }
-      });
-    
-      return context;
-    };
+  // ---------- Background gating ----------
 
     const backgroundKeywords = [
       "chart",
@@ -391,16 +331,16 @@ Return exactly one token: USE_BACKGROUND or NO_BACKGROUND.
         }
       }
   
-      // Build input for Responses API
       const inputPayload = [
-        // Context
-        ...getCompactContext(messages),
-        // Current user turn (user text only)
+        ...(previousResponseId
+          ? []
+          : [{
+            role: "system",
+            content: [{ type: "input_text", text: initialMessages[0].content }],
+          }]),
         {
           role: "user",
-          content: [
-            { type: "input_text", text: userMessage.content },
-          ],
+          content: [{ type: "input_text", text: userMessage.content }],
         },
         ...(useBackground ? buildBackgroundMessages(csvData, instructionText) : []),
       ];
@@ -416,6 +356,7 @@ Return exactly one token: USE_BACKGROUND or NO_BACKGROUND.
             input: inputPayload,
             temperature: 0.7,
             max_output_tokens: 400,
+            ...(previousResponseId ? { previous_response_id: previousResponseId } : {}),
           }),
         }
       );
@@ -440,22 +381,30 @@ Return exactly one token: USE_BACKGROUND or NO_BACKGROUND.
 
       let firstTokenSeen = false;
 
+      let streamedResponseId: string | null = null;
+
+      let streamDone = false;
+
       while (true) {
         const { done, value } = await reader!.read();
         if (done) break;
         const chunk = decoder.decode(value, { stream: true });
-        console.log("RAW CHUNK:", chunk); // 👈 log what the proxy sends
-      
-      
+
         const lines = chunk.split("\n");
         for (const line of lines) {
           if (line.startsWith("data: ")) {
             const dataStr = line.replace("data: ", "").trim();
-            if (dataStr === "[DONE]") return; // end of stream
+            if (dataStr === "[DONE]") {
+              streamDone = true;
+              break;
+            }
             try {
               const parsed = JSON.parse(dataStr);
-              console.log("PARSED SSE DATA:", parsed);
-            
+
+              if (parsed.type === "response.created") {
+                streamedResponseId = parsed.response?.id || parsed.response_id || streamedResponseId;
+              }
+
               if (parsed.type === "response.output_text.delta") {
 
                 // first token arrived
@@ -482,25 +431,34 @@ Return exactly one token: USE_BACKGROUND or NO_BACKGROUND.
               }
             
               if (parsed.type === "response.output_text.done" || parsed.type === "response.output_item.done") {
-                console.log("FINAL:", assistantMessage.content);
+                streamedResponseId = parsed.response?.id || parsed.response_id || streamedResponseId;
               }
             } catch (err) {
               console.warn("Failed to parse SSE line", dataStr, err);
             }            
           }
         }
+        if (streamDone) break;
 
       }
       
 
       // Add the new messages
-      const fullMessages = [...messages, userMessage, assistantMessage];
-
-      // Summarize older messages if chat too long
-      if (fullMessages.length > 5) {
-        const oldPart = fullMessages.slice(0, -6); // summarize older ones, keep last 6
-        await summarizeHistory(oldPart);
+      if (streamedResponseId) {
+        setPreviousResponseId(streamedResponseId);
       }
+
+      const fullMessages = (() => {
+        const current = messagesRef.current;
+        if (current.length === 0) {
+          return [...messages, userMessage, assistantMessage];
+        }
+        const last = current[current.length - 1];
+        if (last?.role === "assistant") {
+          return current;
+        }
+        return [...current, assistantMessage];
+      })();
   
       trrack.apply("updateMessages", actions.updateMessages(fullMessages));
   
