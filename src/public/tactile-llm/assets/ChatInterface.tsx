@@ -325,11 +325,11 @@ Return exactly one token: USE_BACKGROUND or NO_BACKGROUND.
       }
   
       const inputPayload = [
+        ...(useBackground ? buildBackgroundMessages(csvData, instructionText) : []),
         {
           role: "user",
           content: [{ type: "input_text", text: userMessage.content }],
         },
-        ...(useBackground ? buildBackgroundMessages(csvData, instructionText) : []),
       ];
   
       const response = await fetch(
