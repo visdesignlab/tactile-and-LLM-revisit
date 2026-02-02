@@ -197,7 +197,7 @@ Return exactly one token: USE_BACKGROUND or NO_BACKGROUND.
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            model: "gpt-4o-mini",
+            model: "gpt-5-mini",
             input: [
               { role: "system", content: [{ type: "input_text", text: routerPrompt }] },
               { role: "user", content: [{ type: "input_text", text: userText }] },
@@ -338,7 +338,7 @@ Return exactly one token: USE_BACKGROUND or NO_BACKGROUND.
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            model: "gpt-4o",
+            model: "gpt-5.2",
             stream: true,
             instructions: prePrompt,
             input: inputPayload,
