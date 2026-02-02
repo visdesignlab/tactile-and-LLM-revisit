@@ -107,6 +107,7 @@ export default function LLMInterface({ parameters, setAnswer, answers, provenanc
         title="AI Assistant Chat"
         size="lg"
         centered
+        keepMounted
         styles={{
           body: { padding: 0 },
           header: { padding: '1rem' }
