@@ -130,14 +130,7 @@ Examples:
     : (modality === 'tactile' ? instructionsTactilePrompt : instructionsTextPrompt);
 
 
-  const initialMessages: ChatMessage[] = useMemo(() => [
-    {
-      role: 'system',
-      content: `${prePrompt}`,
-      timestamp: new Date().getTime(),
-      display: false,
-    },
-  ], [chartType, prePrompt]);
+  const initialMessages: ChatMessage[] = useMemo(() => [], []);
 
   // Local React states for chat history
   const [messages, setMessages] = useState<ChatMessage[]>([...initialMessages]);
@@ -332,12 +325,6 @@ Return exactly one token: USE_BACKGROUND or NO_BACKGROUND.
       }
   
       const inputPayload = [
-        ...(previousResponseId
-          ? []
-          : [{
-            role: "system",
-            content: [{ type: "input_text", text: initialMessages[0].content }],
-          }]),
         {
           role: "user",
           content: [{ type: "input_text", text: userMessage.content }],
@@ -353,6 +340,7 @@ Return exactly one token: USE_BACKGROUND or NO_BACKGROUND.
           body: JSON.stringify({
             model: "gpt-4o",
             stream: true,
+            instructions: prePrompt,
             input: inputPayload,
             temperature: 0.7,
             max_output_tokens: 400,
