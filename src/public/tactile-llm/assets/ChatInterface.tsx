@@ -25,7 +25,20 @@ import { PREFIX } from '../../../utils/Prefix';
 import { useStudyId } from '../../../routes/utils';
 
 export default function ChatInterface(
-  { modality, chartType, dataset, contentType, setAnswer, provenanceState, onClose, trrack, actions, updateProvenanceState, modalOpened, onMessagesUpdate }:
+  {
+    modality,
+    chartType,
+    dataset,
+    contentType,
+    setAnswer,
+    provenanceState,
+    onClose,
+    trrack,
+    actions,
+    updateProvenanceState,
+    modalOpened,
+    onMessagesUpdate,
+  }:
   {
     modality: 'tactile' | 'text',
     chartType: 'violin-plot' | 'clustered-heatmap',
@@ -35,8 +48,8 @@ export default function ChatInterface(
     provenanceState?: ChatProvenanceState,
     onClose?: () => void,
     trrack: Trrack<{
-        messages: never[];
-        modalOpened: boolean;
+      messages: never[];
+      modalOpened: boolean;
     }, string>,
     actions: {
       updateMessages: ActionCreatorWithPayload<ChatMessage[], string>;
@@ -48,6 +61,7 @@ export default function ChatInterface(
   },
 ) {
   const studyId = useStudyId();
+
   const srOnlyStyles = {
     position: 'absolute',
     width: 1,
@@ -60,8 +74,7 @@ export default function ChatInterface(
     border: 0,
   } as const;
 
-
-  // Define the system prompts
+  // ---------- Prompts ----------
   const instructionsTactilePrompt = `
 You are an accessibility-focused AI tutor helping a blind user learn the **${chartType.replace('-', ' ')}** chart type using an example template chart. The main goal is understanding the chart type; use this example only to illustrate and practice.
 
@@ -77,16 +90,12 @@ Gating policy:
 - Only use background when the user explicitly asks about the chart, dataset/CSV, or instructions, or when the question clearly depends on them.
 - If unclear, ask one short clarifying question.
 
-Examples:
-- User: "hello" → Assistant: "Hi! How can I help you today?"
-- User: "thanks" → Assistant: "You're welcome! Anything else?"
-- User: "What are the axes on this chart?" → Use background to answer.
-
 How to respond:
 - Be concise, clear, and direct.
 - Refer to touch-perceivable structure (axes, groups, rows/columns, ordering, clusters, peaks/valleys). Avoid “look/see” language.
 - Use dataset.csv for exact values and comparisons. Do not invent labels or numbers. If something is missing, say so and ask one short follow-up question.
 `;
+
   const instructionsTextPrompt = `
 You are an accessibility-focused AI tutor helping a blind user learn the **${chartType.replace('-', ' ')}** chart type using an example template chart. The main goal is understanding the chart type; use this example only to illustrate and practice.
 
@@ -102,16 +111,12 @@ Gating policy:
 - Only use background when the user explicitly asks about the chart, dataset/CSV, or instructions, or when the question clearly depends on them.
 - If unclear, ask one short clarifying question.
 
-Examples:
-- User: "hello" → Assistant: "Hi! How can I help you today?"
-- User: "thanks" → Assistant: "You're welcome! Anything else?"
-- User: "Which category has the highest value?" → Use background to answer.
-
 How to respond:
 - Be concise, clear, and direct.
 - Prefer non-visual descriptions (structure, values, trends). Avoid assuming the user can see color or small text.
 - Use dataset.csv for exact values and comparisons. Do not invent labels or numbers. If something is missing, say so and ask one short follow-up question.
 `;
+
   const altTextPrompt = `
 You are an accessibility assistant for a blind user. Your goal is to help the user explore and understand a data visualization while they read the alt text of the chart. You will be given: (1) the chart image and (2) the underlying dataset as a CSV file.
 
@@ -119,25 +124,34 @@ Gating policy:
 - Default: respond normally and do not mention chart/data/instructions.
 - Only use background when the user explicitly asks about the chart, dataset/CSV, or instructions, or when the question clearly depends on them.
 - If unclear, ask one short clarifying question.
-
-Examples:
-- User: "hello" → Assistant: "Hi! How can I help you today?"
-- User: "Explain the chart axes." → Use background to answer.
 `;
 
   const prePrompt = contentType === 'alt-text'
     ? altTextPrompt
     : (modality === 'tactile' ? instructionsTactilePrompt : instructionsTextPrompt);
 
+  // IMPORTANT: only mention tools you actually provide
+  const toolPolicy =
+`Tools (call only when needed):
+- get_dataset_csv: returns dataset.csv as JSON { csv: string }
+- get_instructions: returns instructions markdown as JSON { instructions: string }
+- get_chart_image_file_id: returns JSON { file_id: string } for the chart image
 
+Rules:
+- If the user asks for exact values, rankings, or anything that depends on dataset.csv, call get_dataset_csv BEFORE answering.
+- If the user asks about the instructions (and contentType is instructions), call get_instructions BEFORE answering.
+- If the user asks about chart layout/axes/structure that requires the chart image, call get_chart_image_file_id BEFORE answering.
+- Do not invent numbers; use the CSV for exact values.`;
+
+  const instructions = `${prePrompt}\n\n${toolPolicy}`;
+
+  // ---------- State ----------
   const initialMessages: ChatMessage[] = useMemo(() => [], []);
-
-  // Local React states for chat history
   const [messages, setMessages] = useState<ChatMessage[]>([...initialMessages]);
   const messagesRef = useRef<ChatMessage[]>([...initialMessages]);
+
   const [previousResponseId, setPreviousResponseId] = useState<string | null>(null);
 
-  // Load existing provenance state
   useEffect(() => {
     if (provenanceState) {
       setMessages(provenanceState.messages);
@@ -147,7 +161,6 @@ Examples:
     setPreviousResponseId(null);
   }, [provenanceState, initialMessages]);
 
-  // Update parent component when messages change
   useEffect(() => {
     if (onMessagesUpdate) {
       onMessagesUpdate(messages);
@@ -158,109 +171,25 @@ Examples:
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
+  // ---------- Helpers ----------
+  const getChartImageFileId = (chart: typeof chartType, data: typeof dataset) => {
+    if (chart === 'violin-plot') {
+      return data === 'simple'
+        ? 'file-NnvHu4fUdz5oeqkTxJkRSz' // Violin Plot - Simple Dataset
+        : 'file-NiSf9xDPgv21d6dTzFxaqH'; // Violin Plot - Complex Dataset
+    }
+    return data === 'simple'
+      ? 'file-2jqhMr5MJe3bxfvXeaJYpd' // Clustered Heatmap - Simple Dataset
+      : 'file-AXbDvppNy7Fy6NmwrcaE3p'; // Clustered Heatmap - Complex Dataset
+  };
 
-
-  // ---------- Background gating ----------
-
-    const backgroundKeywords = [
-      "chart",
-      "plot",
-      "heatmap",
-      "violin",
-      "dataset",
-      "csv",
-      "value",
-      "axis",
-      "row",
-      "column",
-      "cluster",
-    ];
-
-    const hasBackgroundKeyword = (text: string) => {
-      const normalized = text.toLowerCase();
-      return backgroundKeywords.some((keyword) => normalized.includes(keyword));
-    };
-
-    const shouldUseBackground = async (userText: string) => {
-      if (hasBackgroundKeyword(userText)) return true;
-
-      const routerPrompt = `
-You are a router. Decide if the user's message explicitly asks about the chart, dataset/CSV, or instructions.
-Return exactly one token: USE_BACKGROUND or NO_BACKGROUND.
-`;
-
-      try {
-        const resp = await fetch(`${import.meta.env.VITE_OPENAI_API_URL}/v1/responses`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: "gpt-5-mini",
-            input: [
-              { role: "system", content: [{ type: "input_text", text: routerPrompt }] },
-              { role: "user", content: [{ type: "input_text", text: userText }] },
-            ],
-            max_output_tokens: 8,
-            temperature: 0,
-          }),
-        });
-
-        const data = await resp.json();
-        const text = (data.output?.[0]?.content?.[0]?.text || "").trim().toUpperCase();
-        return text.includes("USE_BACKGROUND");
-      } catch (err) {
-        console.warn("Router failed, defaulting to NO_BACKGROUND", err);
-        return false;
-      }
-    };
-
-    const buildBackgroundMessages = (
-      csvData: string,
-      instructionText: string,
-    ) => {
-      // System messages only accept input_text, so attach the image as a hidden user message.
-      const backgroundTextMessage = {
-        role: "system",
-        content: [
-          {
-            type: "input_text",
-            text: [
-              "BACKGROUND (reference only — do not mention unless user asks about chart/data/instructions).",
-              instructionText
-                ? `Instructions (${modality === "tactile" ? "tactile exploration" : "textual"}):\n${instructionText}`
-                : "",
-              `Dataset (CSV):\n${csvData}`,
-            ].filter(Boolean).join("\n\n"),
-          },
-        ],
-      };
-
-      const backgroundImageMessage = {
-        role: "user",
-        content: [
-          {
-            type: "input_image",
-            file_id:
-              chartType === "violin-plot"
-                ? dataset === "simple"
-                  ? "file-NnvHu4fUdz5oeqkTxJkRSz" // Violin Plot - Simple Dataset
-                  : "file-NiSf9xDPgv21d6dTzFxaqH" // Violin Plot - Complex Dataset
-                : dataset === "simple"
-                  ? "file-2jqhMr5MJe3bxfvXeaJYpd" // Clustered Heatmap - Simple Dataset
-                  : "file-AXbDvppNy7Fy6NmwrcaE3p", // Clustered Heatmap - Complex Dataset
-          },
-        ],
-      };
-
-      return [backgroundTextMessage, backgroundImageMessage];
-    };
-    
-
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll
   useEffect(() => {
-    const headerHeight = 80; // Adjust this value to match your header's height in px
+    const headerHeight = 80;
     if (messagesEndRef.current) {
       const scrollArea = messagesEndRef.current.parentElement;
       if (scrollArea) {
@@ -274,7 +203,7 @@ Return exactly one token: USE_BACKGROUND or NO_BACKGROUND.
     }
   }, [messages]);
 
-  // Focus input when the modal opens (screen-reader friendly)
+  // Focus input when opened
   useEffect(() => {
     if (!modalOpened) return;
     const focusTimer = window.setTimeout(() => {
@@ -283,195 +212,322 @@ Return exactly one token: USE_BACKGROUND or NO_BACKGROUND.
     return () => window.clearTimeout(focusTimer);
   }, [modalOpened]);
 
+  // ---------- Tools (BEST PRACTICE: no args; use app state) ----------
+  const toolDefinitions = [
+    {
+      type: 'function',
+      name: 'get_dataset_csv',
+      description: 'Return dataset.csv for the current chartType+dataset as JSON { csv: string }.',
+      strict: true,
+      parameters: {
+        type: 'object',
+        properties: {},
+        required: [],
+        additionalProperties: false,
+      },
+    },
+    {
+      type: 'function',
+      name: 'get_instructions',
+      description: 'Return instructions markdown for the current chartType+modality as JSON { instructions: string }.',
+      strict: true,
+      parameters: {
+        type: 'object',
+        properties: {},
+        required: [],
+        additionalProperties: false,
+      },
+    },
+    {
+      type: 'function',
+      name: 'get_chart_image_file_id',
+      description: 'Return JSON { file_id: string } for the chart image for the current chartType+dataset.',
+      strict: true,
+      parameters: {
+        type: 'object',
+        properties: {},
+        required: [],
+        additionalProperties: false,
+      },
+    },
+  ] as const;
 
-  // handleSubmit(): Triggered when the user presses Enter or clicks Send.
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-  
-    if (!inputValue.trim() || isLoading) return;
-  
-    const userMessage: ChatMessage = {
-      role: "user",
-      content: inputValue.trim(),
-      timestamp: new Date().getTime(),
+  const executeToolCall = async (call: any): Promise<{ name: string; output: any }> => {
+    if (call.name === 'get_dataset_csv') {
+      const csvResponse = await fetch(`${PREFIX}${studyId}/assets/data/${chartType}_${dataset}.csv`);
+      if (!csvResponse.ok) {
+        throw new Error(`Failed to load dataset CSV for ${chartType}_${dataset}`);
+      }
+      const csv = await csvResponse.text();
+      return { name: call.name, output: { csv } };
+    }
+
+    if (call.name === 'get_instructions') {
+      if (contentType !== 'instructions') return { name: call.name, output: { instructions: '' } };
+      const instructionPath = `${PREFIX}${studyId}/assets/instructions/${chartType}_instructions_${modality}.md`;
+      const instructionResponse = await fetch(instructionPath);
+      if (!instructionResponse.ok) {
+        throw new Error(`Failed to load instructions from ${instructionPath}`);
+      }
+      const instructionsText = await instructionResponse.text();
+      return { name: call.name, output: { instructions: instructionsText } };
+    }
+
+    if (call.name === 'get_chart_image_file_id') {
+      const file_id = getChartImageFileId(chartType, dataset);
+      return { name: call.name, output: { file_id } };
+    }
+
+    throw new Error(`Unknown tool: ${call.name}`);
+  };
+
+  const tryExtractFunctionCalls = (data: any) => {
+    const out = Array.isArray(data?.output) ? data.output : [];
+    return out.filter((item: any) => item?.type === 'function_call');
+  };
+
+  // ---------- Streaming ----------
+  const streamAssistantResponse = async (
+    inputPayload: unknown[],
+    streamPreviousResponseId?: string | null,
+  ) => {
+    const response = await fetch(
+      `${import.meta.env.VITE_OPENAI_API_URL}/v1/responses`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'gpt-5.2',
+          stream: true,
+          store: true,
+          truncation: 'auto',
+          instructions,
+          tools: toolDefinitions, // ✅ allow tools even in streaming call
+          tool_choice: 'auto',
+          input: inputPayload,
+          temperature: 0.7,
+          max_output_tokens: 400,
+          ...(streamPreviousResponseId ? { previous_response_id: streamPreviousResponseId } : {}),
+        }),
+      },
+    );
+
+    if (!response.ok || !response.body) {
+      const errorText = await response.text().catch(() => '');
+      throw new Error(`Failed to start stream: ${response.status} ${errorText}`);
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    let assistantMessage: ChatMessage = {
+      role: 'assistant',
+      content: '',
+      timestamp: Date.now(),
       display: true,
     };
-  
+
+    let firstTokenSeen = false;
+    let streamedResponseId: string | null = null;
+    let streamDone = false;
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith('data:')) continue;
+        const dataStr = trimmed.replace(/^data:\s*/, '');
+        if (!dataStr) continue;
+
+        if (dataStr === '[DONE]') {
+          streamDone = true;
+          break;
+        }
+
+        try {
+          const parsed = JSON.parse(dataStr);
+
+          if (parsed.type === 'response.created') {
+            streamedResponseId = parsed.response?.id || parsed.response_id || streamedResponseId;
+          }
+
+          if (parsed.type === 'response.output_text.delta') {
+            if (!firstTokenSeen) {
+              firstTokenSeen = true;
+              setIsLoading(false);
+
+              setMessages((prev) => [
+                ...prev,
+                { ...assistantMessage, content: parsed.delta },
+              ]);
+            }
+
+            assistantMessage.content += parsed.delta;
+
+            setMessages((prev) => {
+              const last = prev[prev.length - 1];
+              if (last?.role === 'assistant') {
+                return [...prev.slice(0, -1), { ...last, content: assistantMessage.content }];
+              }
+              return prev;
+            });
+          }
+
+          if (parsed.type === 'response.output_text.done' || parsed.type === 'response.output_item.done') {
+            streamedResponseId = parsed.response?.id || parsed.response_id || streamedResponseId;
+          }
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.warn('Failed to parse SSE line', dataStr, err);
+        }
+      }
+
+      if (streamDone) break;
+    }
+
+    if (!firstTokenSeen) {
+      setIsLoading(false);
+    }
+
+    return { assistantMessage, streamedResponseId };
+  };
+
+  // ---------- Tool selection (non-stream) ----------
+  const requestToolSelection = async (
+    userInputItem: any,
+    priorResponseId: string | null,
+  ) => {
+    const response = await fetch(`${import.meta.env.VITE_OPENAI_API_URL}/v1/responses`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'gpt-5.2',
+        stream: false,
+        store: true,
+        truncation: 'auto',
+        instructions,
+        tools: toolDefinitions,
+        tool_choice: 'auto', // ✅ always auto
+        input: [userInputItem],
+        // Keep this call small; we just want tool requests, not a full answer here.
+        max_output_tokens: 64,
+        temperature: 0,
+        ...(priorResponseId ? { previous_response_id: priorResponseId } : {}),
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => '');
+      throw new Error(`Tool selection failed: ${response.status} ${errorText || response.statusText}`);
+    }
+
+    return response.json();
+  };
+
+  // ---------- Submit ----------
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inputValue.trim() || isLoading) return;
+
+    const userMessage: ChatMessage = {
+      role: 'user',
+      content: inputValue.trim(),
+      timestamp: Date.now(),
+      display: true,
+    };
+
     setMessages((prev) => [...prev, userMessage]);
-    setInputValue("");
+    setInputValue('');
     setIsLoading(true);
     setError(null);
-  
+
     try {
-      const useBackground = await shouldUseBackground(userMessage.content);
+      const priorResponseId = previousResponseId;
 
-      let csvData = "";
-      let instructionText = "";
-
-      if (useBackground) {
-        // Fetch background only when needed to save tokens and prevent irrelevant replies.
-        const csvResponse = await fetch(`${PREFIX}${studyId}/assets/data/${chartType}_${dataset}.csv`);
-        const csvText = await csvResponse.text();
-        csvData = csvText;
-
-        if (contentType === 'instructions') {
-          const instructionPath = `${PREFIX}${studyId}/assets/instructions/${chartType}_instructions_${modality}.md`;
-          const instructionResponse = await fetch(instructionPath);
-          if (!instructionResponse.ok) {
-            throw new Error(`Failed to load instructions from ${instructionPath}`);
-          }
-          instructionText = await instructionResponse.text();
-        }
-      }
-  
-      const inputPayload = [
-        ...(useBackground ? buildBackgroundMessages(csvData, instructionText) : []),
-        {
-          role: "user",
-          content: [{ type: "input_text", text: userMessage.content }],
-        },
-      ];
-  
-      const response = await fetch(
-        `${import.meta.env.VITE_OPENAI_API_URL}/v1/responses`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: "gpt-5.2",
-            stream: true,
-            instructions: prePrompt,
-            input: inputPayload,
-            temperature: 0.7,
-            max_output_tokens: 400,
-            ...(previousResponseId ? { previous_response_id: previousResponseId } : {}),
-          }),
-        }
-      );
-  
-      
-      if (!response.ok || !response.body) {
-        throw new Error("Failed to start stream");
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-
-      let assistantMessage: ChatMessage = {
-        role: "assistant",
-        content: "",
-        timestamp: Date.now(),
-        display: true,
+      const userInputItem = {
+        role: 'user',
+        content: [{ type: 'input_text', text: userMessage.content }],
       };
 
-      // Add assistant placeholder
-      // setMessages((prev) => [...prev, assistantMessage]);
+      // 1) Non-stream call: let the model decide whether it needs any tools.
+      const firstData = await requestToolSelection(userInputItem, priorResponseId);
 
-      let firstTokenSeen = false;
+      const firstResponseId: string | null = firstData?.id || firstData?.response?.id || null;
+      const functionCalls = tryExtractFunctionCalls(firstData);
 
-      let streamedResponseId: string | null = null;
+      if (!functionCalls.length) {
+        // No tools requested -> stream normally (single turn)
+        const streamResult = await streamAssistantResponse([userInputItem], priorResponseId);
+        if (streamResult.streamedResponseId) setPreviousResponseId(streamResult.streamedResponseId);
 
-      let streamDone = false;
-
-      while (true) {
-        const { done, value } = await reader!.read();
-        if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-
-        const lines = chunk.split("\n");
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            const dataStr = line.replace("data: ", "").trim();
-            if (dataStr === "[DONE]") {
-              streamDone = true;
-              break;
-            }
-            try {
-              const parsed = JSON.parse(dataStr);
-
-              if (parsed.type === "response.created") {
-                streamedResponseId = parsed.response?.id || parsed.response_id || streamedResponseId;
-              }
-
-              if (parsed.type === "response.output_text.delta") {
-
-                // first token arrived
-                if (!firstTokenSeen) {
-                  firstTokenSeen = true;
-                  setIsLoading(false); // hide the loader "AI is thinking"
-
-                  // create assistant message only when first token arrives
-                  setMessages((prev) => [
-                    ...prev,
-                    { ...assistantMessage, content: parsed.delta },
-                  ]);
-                }
-                assistantMessage.content += parsed.delta;
-            
-                // update React state live
-                setMessages((prev) => {
-                  const last = prev[prev.length - 1];
-                  if (last?.role === "assistant") {
-                    return [...prev.slice(0, -1), { ...last, content: assistantMessage.content }];
-                  }
-                  return prev;
-                });
-              }
-            
-              if (parsed.type === "response.output_text.done" || parsed.type === "response.output_item.done") {
-                streamedResponseId = parsed.response?.id || parsed.response_id || streamedResponseId;
-              }
-            } catch (err) {
-              console.warn("Failed to parse SSE line", dataStr, err);
-            }            
-          }
-        }
-        if (streamDone) break;
-
-      }
-      
-
-      // Add the new messages
-      if (streamedResponseId) {
-        setPreviousResponseId(streamedResponseId);
+        const fullMessages = messagesRef.current;
+        trrack.apply('updateMessages', actions.updateMessages(fullMessages));
+        updateProvenanceState(fullMessages, modalOpened);
+        return;
       }
 
-      const fullMessages = (() => {
-        const current = messagesRef.current;
-        if (current.length === 0) {
-          return [...messages, userMessage, assistantMessage];
+      // Tools requested -> execute and continue the same response.
+      if (firstResponseId) setPreviousResponseId(firstResponseId);
+
+      const functionCallOutputs: any[] = [];
+      let pendingImageFileId: string | null = null;
+
+      for (const call of functionCalls) {
+        const toolResult = await executeToolCall(call);
+
+        if (toolResult.name === 'get_chart_image_file_id') {
+          pendingImageFileId = toolResult.output?.file_id || null;
         }
-        const last = current[current.length - 1];
-        if (last?.role === "assistant") {
-          return current;
-        }
-        return [...current, assistantMessage];
-      })();
-  
-      trrack.apply("updateMessages", actions.updateMessages(fullMessages));
-  
-      // setAnswer({
-      //   status: true,
-      //   provenanceGraph: trrack.graph.backend,
-      //   answers: {
-      //     // messages: JSON.stringify([...messages, userMessage, assistantMessage]),
-      //     messages: JSON.stringify(fullMessages),
-      //   },
-      // });
+
+        functionCallOutputs.push({
+          type: 'function_call_output',
+          call_id: call.call_id,
+          output: JSON.stringify(toolResult.output), // ✅ structured tool output
+        });
+      }
+
+      // If an image was requested, include it as context for the streaming continuation.
+      // Note: In Responses, the image can be provided as a user message content item.
+      const streamInputPayload: any[] = [...functionCallOutputs];
+      if (pendingImageFileId) {
+        streamInputPayload.push({
+          role: 'user',
+          content: [
+            {
+              type: 'input_image',
+              file_id: pendingImageFileId,
+            },
+          ],
+        });
+      }
+
+      // 2) Stream the final answer by continuing from the tool-requesting response.
+      const streamResult = await streamAssistantResponse(streamInputPayload, firstResponseId);
+      if (streamResult.streamedResponseId) setPreviousResponseId(streamResult.streamedResponseId);
+
+      const fullMessages = messagesRef.current;
+      trrack.apply('updateMessages', actions.updateMessages(fullMessages));
       updateProvenanceState(fullMessages, modalOpened);
-  
     } catch (err) {
-      console.error("Error getting LLM response:", err);
-      setError(err instanceof Error ? err.message : "Failed to get response. Please try again.");
+      // eslint-disable-next-line no-console
+      console.error('Error getting LLM response:', err);
+      setError('Failed to get response. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
-  
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
+      // @ts-ignore
       handleSubmit(e);
     }
   };
@@ -479,17 +535,15 @@ Return exactly one token: USE_BACKGROUND or NO_BACKGROUND.
   return (
     <Box mah="100%" p="md">
       <Divider my="sm" />
-      {/* Messages Container */}
+
       <ScrollArea style={{ flex: 1, minHeight: rem(320), marginBottom: rem(16) }} offsetScrollbars>
         {messages.length === 0 ? (
           <Flex direction="column" align="center" justify="center" py="xl" style={{ color: '#6B7280' }}>
             <IconMessage size={48} style={{ opacity: 0.5, marginBottom: rem(12) }} />
             <Text size="lg" fw={500} mb={4}>Start a conversation</Text>
             <Text size="sm" color="dimmed">
-              Ask me anything about
-              {' '}
-              {chartType.replace('-', ' ')}
-              s!
+              Ask me anything about{' '}
+              {chartType.replace('-', ' ')}s!
             </Text>
           </Flex>
         ) : (
@@ -519,45 +573,44 @@ Return exactly one token: USE_BACKGROUND or NO_BACKGROUND.
                       Assistant said:
                     </Text>
                   )}
-                {message.role === 'assistant' ? (
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                  components={{
-                    p: ({ node, ...props }) => <Text size="sm" {...props} />,
-                    li: ({ node, ...props }) => (
-                      <li style={{ marginLeft: 16 }} {...props} />
-                    ),
-                    code: ({ inline, children, ...props }: any) => (
-                      <code
-                        style={{
-                          backgroundColor: inline ? '#e9ecef' : '#f1f3f5',
-                          borderRadius: 4,
-                          padding: inline ? '2px 4px' : '8px',
-                          display: inline ? 'inline' : 'block',
-                          overflowX: 'auto',
-                          fontFamily: 'monospace',
-                          color: '#212529',
-                        }}
-                        {...props}
-                      >
-                        {children}
-                      </code>
-                    ),
-                  }}
-                >
-                  {message.content}
-                </ReactMarkdown>
-              ) : (
-                <Text size="sm">{message.content}</Text>
-              )}
-                  {/* <Text size="xs" mt={4} color={message.role === 'user' ? 'blue.1' : 'gray.6'}>
-                    {new Date(message.timestamp).toLocaleTimeString()}
-                  </Text> */}
+
+                  {message.role === 'assistant' ? (
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        p: ({ node, ...props }) => <Text size="sm" {...props} />,
+                        li: ({ node, ...props }) => (
+                          <li style={{ marginLeft: 16 }} {...props} />
+                        ),
+                        code: ({ inline, children, ...props }: any) => (
+                          <code
+                            style={{
+                              backgroundColor: inline ? '#e9ecef' : '#f1f3f5',
+                              borderRadius: 4,
+                              padding: inline ? '2px 4px' : '8px',
+                              display: inline ? 'inline' : 'block',
+                              overflowX: 'auto',
+                              fontFamily: 'monospace',
+                              color: '#212529',
+                            }}
+                            {...props}
+                          >
+                            {children}
+                          </code>
+                        ),
+                      }}
+                    >
+                      {message.content}
+                    </ReactMarkdown>
+                  ) : (
+                    <Text size="sm">{message.content}</Text>
+                  )}
                 </Paper>
               </Flex>
             ))}
           </Flex>
         )}
+
         {isLoading && (
           <Flex justify="flex-start" mt="md">
             <Paper shadow="xs" radius="md" p="md" withBorder style={{ backgroundColor: '#f8f9fa', color: '#212529' }}>
@@ -568,15 +621,16 @@ Return exactly one token: USE_BACKGROUND or NO_BACKGROUND.
             </Paper>
           </Flex>
         )}
+
         <div ref={messagesEndRef} />
       </ScrollArea>
-      {/* Error Display */}
+
       {error && (
         <Paper mb="md" p="sm" radius="md" withBorder style={{ backgroundColor: '#fff0f0', borderColor: '#ffe3e3' }}>
           <Text color="red" size="sm">{error}</Text>
         </Paper>
       )}
-      {/* Input Form */}
+
       <form onSubmit={handleSubmit} style={{ display: 'flex', gap: rem(8) }}>
         <Textarea
           ref={inputRef}
@@ -584,7 +638,7 @@ Return exactly one token: USE_BACKGROUND or NO_BACKGROUND.
           data-autofocus
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          onKeyPress={handleKeyPress}
+          onKeyDown={handleKeyDown}
           placeholder="Ask me about the chart..."
           minRows={2}
           maxRows={4}
@@ -605,7 +659,7 @@ Return exactly one token: USE_BACKGROUND or NO_BACKGROUND.
           <IconSend size={18} />
         </Button>
       </form>
-      {/* Accessibility Info */}
+
       <Text mt="md" size="xs" color="dimmed">
         Press Enter to send, Shift+Enter for new line. All conversations are recorded for research purposes.
       </Text>
