@@ -534,17 +534,17 @@ Rules:
 
   return (
     <Box mah="100%" p="md">
-      <Divider my="sm" />
+      {/* <Divider my="sm" /> */}
 
       <ScrollArea style={{ flex: 1, minHeight: rem(320), marginBottom: rem(16) }} offsetScrollbars>
         {messages.length === 0 ? (
           <Flex direction="column" align="center" justify="center" py="xl" style={{ color: '#6B7280' }}>
-            <IconMessage size={48} style={{ opacity: 0.5, marginBottom: rem(12) }} />
-            <Text size="lg" fw={500} mb={4}>Start a conversation</Text>
-            <Text size="sm" color="dimmed">
+            {/* <IconMessage size={48} style={{ opacity: 0.5, marginBottom: rem(12) }} /> */}
+            {/* <Text size="lg" fw={500} mb={4}>Start a conversation</Text> */}
+            {/* <Text size="sm" color="dimmed">
               Ask me anything about{' '}
               {chartType.replace('-', ' ')}s!
-            </Text>
+            </Text> */}
           </Flex>
         ) : (
           <Flex direction="column" gap="md">

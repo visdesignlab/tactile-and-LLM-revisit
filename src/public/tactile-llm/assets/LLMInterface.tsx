@@ -108,6 +108,7 @@ export default function LLMInterface({ parameters, setAnswer, answers, provenanc
         size="lg"
         centered
         keepMounted
+        closeButtonProps={{ 'aria-label': 'Close modal' }}
         styles={{
           body: { padding: 0 },
           header: { padding: '1rem' }
