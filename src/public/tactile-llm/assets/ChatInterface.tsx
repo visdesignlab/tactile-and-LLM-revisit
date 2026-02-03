@@ -171,6 +171,7 @@ Rules:
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [srStatus, setSrStatus] = useState('');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -396,6 +397,7 @@ Rules:
       setIsLoading(false);
     }
 
+    setSrStatus('Response ready.');
     return { assistantMessage, streamedResponseId };
   };
 
@@ -447,6 +449,7 @@ Rules:
     setInputValue('');
     setIsLoading(true);
     setError(null);
+    setSrStatus('AI is thinking.');
 
     try {
       const priorResponseId = previousResponseId;
@@ -519,6 +522,7 @@ Rules:
       // eslint-disable-next-line no-console
       console.error('Error getting LLM response:', err);
       setError('Failed to get response. Please try again.');
+      setSrStatus('Failed to get response.');
     } finally {
       setIsLoading(false);
     }
@@ -534,6 +538,15 @@ Rules:
 
   return (
     <Box mah="100%" p="md">
+      <Text
+        component="div"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        style={srOnlyStyles}
+      >
+        {srStatus}
+      </Text>
       {/* <Divider my="sm" /> */}
 
       <ScrollArea style={{ flex: 1, minHeight: rem(320), marginBottom: rem(16) }} offsetScrollbars>
