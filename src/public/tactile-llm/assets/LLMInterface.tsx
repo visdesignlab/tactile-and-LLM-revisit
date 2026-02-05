@@ -1,5 +1,5 @@
 import { Card, Flex, Modal } from '@mantine/core';
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import ChatInterface from './ChatInterface';
 import InstructionsDisplay from './InstructionsDisplay';
 import { StimulusParams } from '../../../store/types';
@@ -10,6 +10,7 @@ export default function LLMInterface({ parameters, setAnswer, answers, provenanc
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [fullMessages, setFullMessages] = useState<ChatMessage[]>([]);
+  const inputElRef = useRef<HTMLTextAreaElement | null>(null);
 
   function setModal(open: boolean) {
     trrack.apply('modalOpened', actions.modalOpened(open));
@@ -88,6 +89,15 @@ export default function LLMInterface({ parameters, setAnswer, answers, provenanc
     }
   }, [provenanceState]);
 
+  useEffect(() => {
+    if (!isModalOpen) return;
+    // Focus is managed once here after the modal is fully mounted/trapped.
+    const raf = requestAnimationFrame(() => {
+      requestAnimationFrame(() => inputElRef.current?.focus());
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [isModalOpen]);
+
 
   return (
     <>
@@ -127,6 +137,9 @@ export default function LLMInterface({ parameters, setAnswer, answers, provenanc
           updateProvenanceState={updateProvenanceState}
           modalOpened={isModalOpen}
           onMessagesUpdate={handleMessagesUpdate}
+          onInputRef={(el) => {
+            inputElRef.current = el;
+          }}
         />
       </Modal>
     </>

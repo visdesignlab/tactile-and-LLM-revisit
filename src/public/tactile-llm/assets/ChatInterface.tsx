@@ -38,6 +38,7 @@ export default function ChatInterface(
     updateProvenanceState,
     modalOpened,
     onMessagesUpdate,
+    onInputRef,
   }:
   {
     modality: 'tactile' | 'text',
@@ -58,6 +59,7 @@ export default function ChatInterface(
     updateProvenanceState: (messages: unknown[], modalOpened: boolean) => void,
     modalOpened: boolean,
     onMessagesUpdate?: (messages: ChatMessage[]) => void,
+    onInputRef?: (el: HTMLTextAreaElement | null) => void,
   },
 ) {
   const studyId = useStudyId();
@@ -172,11 +174,44 @@ Rules:
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [srStatus, setSrStatus] = useState('');
+  const [srResponseAnnouncement, setSrResponseAnnouncement] = useState('');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const lastTypingTsRef = useRef(0);
+  const srResponseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ---------- Helpers ----------
+  const maintainInputFocus = () => {
+    const inputEl = inputRef.current;
+    if (!inputEl) return;
+    requestAnimationFrame(() => {
+      if (document.activeElement !== inputEl) {
+        inputEl.focus({ preventScroll: true });
+      }
+    });
+  };
+
+  const markTyping = () => {
+    lastTypingTsRef.current = Date.now();
+  };
+
+  const announceAssistantResponse = (text: string) => {
+    setSrResponseAnnouncement('');
+    if (srResponseTimeoutRef.current) {
+      clearTimeout(srResponseTimeoutRef.current);
+    }
+    srResponseTimeoutRef.current = setTimeout(() => {
+      setSrResponseAnnouncement(text);
+    }, 0);
+  };
+
+  useEffect(() => () => {
+    if (srResponseTimeoutRef.current) {
+      clearTimeout(srResponseTimeoutRef.current);
+    }
+  }, []);
+
   const getChartImageFileId = (chart: typeof chartType, data: typeof dataset) => {
     if (chart === 'violin-plot') {
       return data === 'simple'
@@ -203,15 +238,6 @@ Rules:
       }
     }
   }, [messages]);
-
-  // Focus input when opened
-  useEffect(() => {
-    if (!modalOpened) return;
-    const focusTimer = window.setTimeout(() => {
-      inputRef.current?.focus();
-    }, 0);
-    return () => window.clearTimeout(focusTimer);
-  }, [modalOpened]);
 
   // ---------- Tools (BEST PRACTICE: no args; use app state) ----------
   const toolDefinitions = [
@@ -398,6 +424,9 @@ Rules:
     }
 
     setSrStatus('Response ready.');
+    if (assistantMessage.content.trim()) {
+      announceAssistantResponse(assistantMessage.content);
+    }
     return { assistantMessage, streamedResponseId };
   };
 
@@ -529,6 +558,7 @@ Rules:
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    markTyping();
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       // @ts-ignore
@@ -546,6 +576,16 @@ Rules:
         style={srOnlyStyles}
       >
         {srStatus}
+      </Text>
+      <Text
+        component="div"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        aria-relevant="additions text"
+        style={srOnlyStyles}
+      >
+        {srResponseAnnouncement}
       </Text>
       {/* <Divider my="sm" /> */}
 
@@ -646,16 +686,25 @@ Rules:
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', gap: rem(8) }}>
         <Textarea
-          ref={inputRef}
-          autoFocus
-          data-autofocus
+          ref={(el) => {
+            inputRef.current = el;
+            onInputRef?.(el);
+          }}
           value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
+          onChange={(e) => {
+            markTyping();
+            setInputValue(e.target.value);
+          }}
           onKeyDown={handleKeyDown}
+          onBlur={() => {
+            const recentlyTyped = Date.now() - lastTypingTsRef.current < 1000;
+            if (recentlyTyped) {
+              maintainInputFocus();
+            }
+          }}
           placeholder="Ask me about the chart..."
           minRows={2}
           maxRows={4}
-          disabled={isLoading}
           aria-label="Type your message"
           style={{ flex: 1 }}
           autosize
