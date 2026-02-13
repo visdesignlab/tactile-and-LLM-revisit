@@ -31,6 +31,8 @@
     },
     "learn1": {
       "type": "react-component",
+      "previousButton": true,
+      "previousButtonText": "Back",
       "path": "tactile-llm/assets/LLMInterface.tsx",
       "recordAudio": true,
       "response": [],
@@ -43,6 +45,8 @@
     },
     "simpleAltText1": {
       "type": "react-component",
+      "previousButton": true,
+      "previousButtonText": "Back",
       "path": "tactile-llm/assets/LLMInterface.tsx",
       "recordAudio": true,
       "response": [],
@@ -55,6 +59,8 @@
     },
     "test1": {
       "type": "react-component",
+      "previousButton": true,
+      "previousButtonText": "Back",
       "path": "tactile-llm/assets/LLMInterface.tsx",
       "recordAudio": true,
       "response": [],
@@ -67,6 +73,8 @@
     },
     "learn2": {
       "type": "react-component",
+      "previousButton": true,
+      "previousButtonText": "Back",
       "path": "tactile-llm/assets/LLMInterface.tsx",
       "recordAudio": true,
       "response": [],
@@ -79,6 +87,8 @@
     },
     "simpleAltText2": {
       "type": "react-component",
+      "previousButton": true,
+      "previousButtonText": "Back",
       "path": "tactile-llm/assets/LLMInterface.tsx",
       "recordAudio": true,
       "response": [],
@@ -91,6 +101,8 @@
     },
     "test2": {
       "type": "react-component",
+      "previousButton": true,
+      "previousButtonText": "Back",
       "path": "tactile-llm/assets/LLMInterface.tsx",
       "recordAudio": true,
       "response": [],
