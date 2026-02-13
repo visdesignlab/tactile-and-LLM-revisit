@@ -35,7 +35,7 @@
       "recordAudio": true,
       "response": [],
       "parameters": {
-        "chartType": "violin-plot",
+        "chartType": "clustered-heatmap",
         "modality": "tactile",
         "dataset": "simple",
         "contentType": "instructions"
@@ -47,7 +47,7 @@
       "recordAudio": true,
       "response": [],
       "parameters": {
-        "chartType": "violin-plot",
+        "chartType": "clustered-heatmap",
         "modality": "tactile",
         "dataset": "simple",
         "contentType": "alt-text"
@@ -59,7 +59,7 @@
       "recordAudio": true,
       "response": [],
       "parameters": {
-        "chartType": "violin-plot",
+        "chartType": "clustered-heatmap",
         "modality": "tactile",
         "dataset": "complex",
         "contentType": "alt-text"
@@ -71,7 +71,7 @@
       "recordAudio": true,
       "response": [],
       "parameters": {
-        "chartType": "clustered-heatmap",
+        "chartType": "violin-plot",
         "modality": "text",
         "dataset": "simple",
         "contentType": "instructions"
@@ -83,7 +83,7 @@
       "recordAudio": true,
       "response": [],
       "parameters": {
-        "chartType": "clustered-heatmap",
+        "chartType": "violin-plot",
         "modality": "text",
         "dataset": "simple",
         "contentType": "alt-text"
@@ -95,7 +95,7 @@
       "recordAudio": true,
       "response": [],
       "parameters": {
-        "chartType": "clustered-heatmap",
+        "chartType": "violin-plot",
         "modality": "text",
         "dataset": "complex",
         "contentType": "alt-text"
