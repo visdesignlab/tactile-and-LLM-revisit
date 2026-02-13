@@ -1,7 +1,13 @@
 # Clustered Heatmap Alt-Text (Example)
 
-This **clustered heatmap** visualizes how frequently actors appear in different movie genres. Similar patterns are grouped together. 
+This is a **clustered heatmap** showing how frequently actors appear in different movie genres.
 
+- **Rows:** Actors.  
+- **Columns:** Movie genres.  
+- **Cells (color intensity):** The number of appearances for each actor–genre pair. **Darker** cells indicate **more** appearances, and **lighter** cells indicate **fewer** (or none).  
+- **Clustering:** Actors and genres are **clustered by similarity**. A **hierarchical tree (dendrogram)** next to the rows shows which actors cluster together (shorter branch distances indicate more similar genre-appearance patterns). Another dendrogram above the columns shows which genres cluster together.
+
+**Overall pattern:** 
 * Julia Roberts and Tom Hanks show similar patterns, focusing primarily on Drama and Comedy  
 * Jennifer Lawrence and Leonardo DiCaprio share a strong emphasis on Drama  
 * Dwayne Johnson is  an outlier in this dataset, with a strong specialization in Action and no Romance films
@@ -27,6 +33,10 @@ And **four movie genres** (columns):
 * Romance
 
 Each cell indicates the number of movies an actor has performed in for each genre using color saturation. Dark cells indicate many movies. The rows and columns are **clustered** based on similarity patterns. The most similar clusters of actors and genres are connected with the tree above and to the left of the matrix. 
+
+[delete below]
+
+(should I add x, y axes, and a title?)
 
 ## Statistical Information
 
