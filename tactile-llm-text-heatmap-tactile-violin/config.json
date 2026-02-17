@@ -1,0 +1,129 @@
+{
+  "$schema": "https://raw.githubusercontent.com/revisit-studies/study/dev/src/parser/StudyConfigSchema.json",
+  "studyMetadata": {
+    "title": "Text Heatmap - Tactile Violin",
+    "version": "pilot",
+    "authors": [
+      "The reVISit Team"
+    ],
+    "date": "2023-04-14",
+    "description": "A simple demo of using stimuli in an HTML file that renders a D3 visualization. Data is collected via a numeric response field.",
+    "organizations": [
+      "University of Utah",
+      "WPI",
+      "University of Toronto"
+    ]
+  },
+  "uiConfig": {
+    "contactEmail": "contact@revisit.dev",
+    "helpTextPath": "tactile-llm/assets/help.md",
+    "logoPath": "revisitAssets/revisitLogoSquare.svg",
+    "withProgressBar": false,
+    "autoDownloadStudy": false,
+    "withSidebar": false,
+    "windowEventDebounceTime": 200
+  },
+  "components": {
+    "introduction": {
+      "type": "markdown",
+      "path": "tactile-llm/assets/introduction.md",
+      "response": []
+    },
+    "learn1": {
+      "type": "react-component",
+      "previousButton": true,
+      "previousButtonText": "Back",
+      "path": "tactile-llm/assets/LLMInterface.tsx",
+      "recordAudio": true,
+      "response": [],
+      "parameters": {
+        "chartType": "clustered-heatmap",
+        "modality": "text",
+        "dataset": "simple",
+        "contentType": "instructions"
+      }
+    },
+    "simpleAltText1": {
+      "type": "react-component",
+      "previousButton": true,
+      "previousButtonText": "Back",
+      "path": "tactile-llm/assets/LLMInterface.tsx",
+      "recordAudio": true,
+      "response": [],
+      "parameters": {
+        "chartType": "clustered-heatmap",
+        "modality": "text",
+        "dataset": "simple",
+        "contentType": "alt-text"
+      }
+    },
+    "test1": {
+      "type": "react-component",
+      "previousButton": true,
+      "previousButtonText": "Back",
+      "path": "tactile-llm/assets/LLMInterface.tsx",
+      "recordAudio": true,
+      "response": [],
+      "parameters": {
+        "chartType": "clustered-heatmap",
+        "modality": "text",
+        "dataset": "complex",
+        "contentType": "alt-text"
+      }
+    },
+    "learn2": {
+      "type": "react-component",
+      "previousButton": true,
+      "previousButtonText": "Back",
+      "path": "tactile-llm/assets/LLMInterface.tsx",
+      "recordAudio": true,
+      "response": [],
+      "parameters": {
+        "chartType": "violin-plot",
+        "modality": "tactile",
+        "dataset": "simple",
+        "contentType": "instructions"
+      }
+    },
+    "simpleAltText2": {
+      "type": "react-component",
+      "previousButton": true,
+      "previousButtonText": "Back",
+      "path": "tactile-llm/assets/LLMInterface.tsx",
+      "recordAudio": true,
+      "response": [],
+      "parameters": {
+        "chartType": "violin-plot",
+        "modality": "tactile",
+        "dataset": "simple",
+        "contentType": "alt-text"
+      }
+    },
+    "test2": {
+      "type": "react-component",
+      "previousButton": true,
+      "previousButtonText": "Back",
+      "path": "tactile-llm/assets/LLMInterface.tsx",
+      "recordAudio": true,
+      "response": [],
+      "parameters": {
+        "chartType": "violin-plot",
+        "modality": "tactile",
+        "dataset": "complex",
+        "contentType": "alt-text"
+      }
+    }
+  },
+  "sequence": {
+    "order": "fixed",
+    "components": [
+      "introduction",
+      "learn1",
+      "simpleAltText1",
+      "test1",
+      "learn2",
+      "simpleAltText2",
+      "test2"
+    ]
+  }
+}
