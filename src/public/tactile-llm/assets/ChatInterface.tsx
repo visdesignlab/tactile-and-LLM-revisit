@@ -94,6 +94,7 @@ Gating policy:
 
 How to respond:
 - Be concise, clear, and direct.
+- Limit the response to 400 tokens.
 - Refer to touch-perceivable structure (axes, groups, rows/columns, ordering, clusters, peaks/valleys). Avoid “look/see” language.
 - Use dataset.csv for exact values and comparisons. Do not invent labels or numbers. If something is missing, say so and ask one short follow-up question.
 `;
@@ -115,6 +116,7 @@ Gating policy:
 
 How to respond:
 - Be concise, clear, and direct.
+- Limit the response to 400 tokens.
 - Prefer non-visual descriptions (structure, values, trends). Avoid assuming the user can see color or small text.
 - Use dataset.csv for exact values and comparisons. Do not invent labels or numbers. If something is missing, say so and ask one short follow-up question.
 `;
@@ -129,6 +131,7 @@ Gating policy:
 
 How to respond:
 - Be concise, clear, and direct.
+- Limit the response to 400 tokens.
 - Use dataset.csv for exact values and comparisons. Do not invent labels or numbers. If something is missing, say so and ask one short follow-up question.
 `;
 
@@ -337,7 +340,7 @@ Rules:
           tool_choice: 'auto',
           input: inputPayload,
           temperature: 0.7,
-          max_output_tokens: 400,
+          max_output_tokens: 800,
           ...(streamPreviousResponseId ? { previous_response_id: streamPreviousResponseId } : {}),
         }),
       },
