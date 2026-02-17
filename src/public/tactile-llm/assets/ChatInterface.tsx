@@ -281,7 +281,7 @@ Rules:
 
   const executeToolCall = async (call: any): Promise<{ name: string; output: any }> => {
     if (call.name === 'get_dataset_csv') {
-      const csvResponse = await fetch(`${PREFIX}${studyId}/assets/data/${chartType}_${dataset}.csv`);
+      const csvResponse = await fetch(`${PREFIX}tactile-llm/assets/data/${chartType}_${dataset}.csv`);
       if (!csvResponse.ok) {
         throw new Error(`Failed to load dataset CSV for ${chartType}_${dataset}`);
       }
@@ -291,7 +291,7 @@ Rules:
 
     if (call.name === 'get_instructions') {
       if (contentType !== 'instructions') return { name: call.name, output: { instructions: '' } };
-      const instructionPath = `${PREFIX}${studyId}/assets/instructions/${chartType}_instructions_${modality}.md`;
+      const instructionPath = `${PREFIX}tactile-llm/assets/instructions/${chartType}_instructions_${modality}.md`;
       const instructionResponse = await fetch(instructionPath);
       if (!instructionResponse.ok) {
         throw new Error(`Failed to load instructions from ${instructionPath}`);

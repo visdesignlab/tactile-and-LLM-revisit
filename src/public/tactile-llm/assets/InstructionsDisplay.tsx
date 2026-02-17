@@ -43,7 +43,10 @@ export default function InstructionsDisplay({ chartType, modality, dataset, cont
 
         // In production, this would fetch from an API
         // For now, we'll simulate loading the content
-        const response = await fetch(`${PREFIX}${studyId}/assets/instructions/${fileName}`);
+
+        // const response = await fetch(`${PREFIX}${studyId}/assets/instructions/${fileName}`);
+        const response = await fetch(`${PREFIX}tactile-llm/assets/instructions/${fileName}`); // All tactile-llm- studies share the same material folder (in tactile-llm/), so we don't use the ${PREFIX}${studyId}/assets/instructions/${fileName} here
+   
 
         if (!response.ok) {
           throw new Error(`Failed to load instructions: ${response.statusText}`);

@@ -4,6 +4,10 @@
     "tutorial",
     "tutorial-replication",
     "tactile-llm",
+    "tactile-llm-tactile-heatmap-text-violin",
+    "tactile-llm-text-heatmap-tactile-violin",
+    "tactile-llm-text-violin-tactile-heatmap",
+    "tactile-llm-tactile-violin-text-heatmap",
     "demo-html",
     "demo-html-input",
     "demo-screen-recording",
@@ -238,6 +242,18 @@
     "tactile-llm": {
       "path": "tactile-llm/config.json",
       "test": true
+    },
+    "tactile-llm-tactile-heatmap-text-violin": {
+      "path": "tactile-llm-tactile-heatmap-text-violin/config.json"
+    },
+    "tactile-llm-text-heatmap-tactile-violin": {
+      "path": "tactile-llm-text-heatmap-tactile-violin/config.json"
+    },
+    "tactile-llm-text-violin-tactile-heatmap": {
+      "path": "tactile-llm-text-violin-tactile-heatmap/config.json"
+    },
+    "tactile-llm-tactile-violin-text-heatmap": {
+      "path": "tactile-llm-tactile-violin-text-heatmap/config.json"
     }
   }
 }

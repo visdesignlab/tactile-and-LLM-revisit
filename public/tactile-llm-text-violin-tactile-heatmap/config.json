@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/revisit-studies/study/dev/src/parser/StudyConfigSchema.json",
   "studyMetadata": {
-    "title": "Tactile LLM",
+    "title": "Text Violin - Tactile Heatmap",
     "version": "pilot",
     "authors": [
       "The reVISit Team"
@@ -37,8 +37,8 @@
       "recordAudio": true,
       "response": [],
       "parameters": {
-        "chartType": "clustered-heatmap",
-        "modality": "tactile",
+        "chartType": "violin-plot",
+        "modality": "text",
         "dataset": "simple",
         "contentType": "instructions"
       }
@@ -51,8 +51,8 @@
       "recordAudio": true,
       "response": [],
       "parameters": {
-        "chartType": "clustered-heatmap",
-        "modality": "tactile",
+        "chartType": "violin-plot",
+        "modality": "text",
         "dataset": "simple",
         "contentType": "alt-text"
       }
@@ -65,8 +65,8 @@
       "recordAudio": true,
       "response": [],
       "parameters": {
-        "chartType": "clustered-heatmap",
-        "modality": "tactile",
+        "chartType": "violin-plot",
+        "modality": "text",
         "dataset": "complex",
         "contentType": "alt-text"
       }
@@ -79,8 +79,8 @@
       "recordAudio": true,
       "response": [],
       "parameters": {
-        "chartType": "violin-plot",
-        "modality": "text",
+        "chartType": "clustered-heatmap",
+        "modality": "tactile",
         "dataset": "simple",
         "contentType": "instructions"
       }
@@ -93,8 +93,8 @@
       "recordAudio": true,
       "response": [],
       "parameters": {
-        "chartType": "violin-plot",
-        "modality": "text",
+        "chartType": "clustered-heatmap",
+        "modality": "tactile",
         "dataset": "simple",
         "contentType": "alt-text"
       }
@@ -107,8 +107,8 @@
       "recordAudio": true,
       "response": [],
       "parameters": {
-        "chartType": "violin-plot",
-        "modality": "text",
+        "chartType": "clustered-heatmap",
+        "modality": "tactile",
         "dataset": "complex",
         "contentType": "alt-text"
       }
