@@ -126,6 +126,10 @@ Gating policy:
 - Default: respond normally and do not mention chart/data/instructions.
 - Only use background when the user explicitly asks about the chart, dataset/CSV, or instructions, or when the question clearly depends on them.
 - If unclear, ask one short clarifying question.
+
+How to respond:
+- Be concise, clear, and direct.
+- Use dataset.csv for exact values and comparisons. Do not invent labels or numbers. If something is missing, say so and ask one short follow-up question.
 `;
 
   const prePrompt = contentType === 'alt-text'
