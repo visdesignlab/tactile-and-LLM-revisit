@@ -340,7 +340,7 @@ Rules:
           tool_choice: 'auto',
           input: inputPayload,
           temperature: 0.7,
-          max_output_tokens: 800,
+          max_output_tokens: 1600,
           ...(streamPreviousResponseId ? { previous_response_id: streamPreviousResponseId } : {}),
         }),
       },
